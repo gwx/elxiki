@@ -55,4 +55,3 @@ Stuff To Add
 ------------
 
 * Menus
-* Getting it to work right with tramp

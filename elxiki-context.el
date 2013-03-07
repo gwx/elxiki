@@ -71,7 +71,7 @@ returns.  The results of this can be modified by adjusting
 (defun elxiki-context-get-dir (context)
   "Gets the current directory from CONTEXT."
   (file-name-directory (or (cdr (assoc 'file context))
-                           ".")))
+                           default-directory)))
 
 (provide 'elxiki-context)
 ;;; elxiki-context.el ends here

@@ -64,11 +64,11 @@ situations where they do not want to act."
       (elxiki-line-add-children
        (mapcar
         (lambda (line) (concat "| " line))
-        (split-string (shell-command-to-string
-                       (concat "cd " (elxiki-context-get-dir context)
-                               "; " (nth 1 line-info)))
-                      "\n"
-                      'nonull)))
+        (let ((default-directory (elxiki-context-get-dir context))
+              (shell-file-name "/bin/sh"))
+          (split-string (shell-command-to-string (nth 1 line-info))
+                        "\n"
+                        'nonull))))
       (message "Ran: %s" (nth 1 line-info))
       t)))
 
@@ -76,9 +76,9 @@ situations where they do not want to act."
   "Opens up an asynchronous shell."
   (let ((line-info (elxiki-line-get)))
     (when (string-equal "% " (nth 0 line-info))
-      (async-shell-command
-       (concat "cd " (elxiki-context-get-dir context)
-               "; " (nth 1 line-info)))
+      (let ((default-directory (elxiki-context-get-dir context))
+            (shell-file-name "/bin/sh"))
+        (async-shell-command (nth 1 line-info)))
       t)))
 
 (define-elxiki-command elxiki-command/find-file
