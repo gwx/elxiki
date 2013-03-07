@@ -36,7 +36,7 @@ situations where they do not want to act."
 
 (define-elxiki-command elxiki-command/expand-dir
   "Expands a directory."
-  (let ((dir (cdr (assoc 'file context))))
+  (let ((dir (elxiki-context-get-dir context)))
     (when (and dir
                (member (elxiki-line-get-prefix)
                        '(nil "+ "))
