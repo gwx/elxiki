@@ -38,6 +38,8 @@ situations where they do not want to act."
   "Expands a directory."
   (let ((dir (cdr (assoc 'file context))))
     (when (and dir
+               (member (elxiki-line-get-prefix)
+                       '(nil "+ "))
                (file-directory-p dir)
                (not (elxiki-line-find-child)))
       (setq dir (file-name-as-directory dir))
