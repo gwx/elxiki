@@ -91,7 +91,8 @@ situations where they do not want to act."
 
 (define-elxiki-command elxiki-command/run-code
   "Runs elisp code."
-  (let ((line-info (elxiki-line-get)))
+  (let ((line-info (elxiki-line-get))
+        (default-directory (elxiki-context-get-dir context)))
     (when (string-equal "! " (nth 0 line-info))
       (elxiki-line-add-children
        (mapcar
