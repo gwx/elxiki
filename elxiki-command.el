@@ -67,6 +67,7 @@ situations where they do not want to act."
                                "; " (nth 1 line-info)))
                       "\n"
                       'nonull)))
+      (message "Ran: %s" (nth 1 line-info))
       t)))
 
 (define-elxiki-command elxiki-command/async-shell
