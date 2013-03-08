@@ -36,7 +36,7 @@ situations where they do not want to act."
 
 (define-elxiki-command elxiki-command/expand-dir
   "Expands a directory."
-  (let ((dir (elxiki-context-get-dir context)))
+  (let ((dir (elxiki-context-default-directory context)))
     (when (and dir
                (member (elxiki-line-get-prefix)
                        '(nil "+ "))
@@ -51,55 +51,51 @@ situations where they do not want to act."
             (cond ((file-directory-p full)
                    (concat "+ " file "/"))
                   ((file-executable-p full)
-                   (concat "$ " file))
+                   (concat "$ ./" file))
                   ('else (concat "* " file)))))
         (directory-files dir)))
       t)))
 
 (define-elxiki-command elxiki-command/expand-shell
   "Expands a shell process."
-  (let ((line-info (elxiki-line-get)))
-    (when (and (string-equal "$ " (nth 0 line-info))
-               (not (elxiki-line-find-child)))
-      (elxiki-line-add-children
-       (mapcar
-        (lambda (line) (concat "| " line))
-        (let ((default-directory (elxiki-context-get-dir context))
-              (shell-file-name "/bin/sh"))
-          (split-string (shell-command-to-string (nth 1 line-info))
-                        "\n"
-                        'nonull))))
-      (message "Ran: %s" (nth 1 line-info))
-      t)))
+  (when (and (string-equal "$ " (elxiki-context-get-prefix context))
+             (not (elxiki-line-find-child)))
+    (elxiki-line-add-children
+     (mapcar
+      (lambda (line) (concat "| " line))
+      (let ((default-directory (elxiki-context-default-directory context))
+            (shell-file-name "/bin/bash"))
+        (split-string (shell-command-to-string (elxiki-context-get-name context))
+                      "\n"
+                      'nonull))))
+    (message "Ran: %s" (elxiki-context-get-name context))
+    t))
 
 (define-elxiki-command elxiki-command/async-shell
   "Opens up an asynchronous shell."
-  (let ((line-info (elxiki-line-get)))
-    (when (string-equal "% " (nth 0 line-info))
-      (let ((default-directory (elxiki-context-get-dir context))
-            (shell-file-name "/bin/sh"))
-        (async-shell-command (nth 1 line-info)))
-      t)))
+  (when (string-equal "% " (elxiki-context-get-prefix context))
+    (let ((default-directory (elxiki-context-default-directory context))
+          (shell-file-name "/bin/sh"))
+      (async-shell-command (elxiki-context-get-name context)))
+    t))
 
 (define-elxiki-command elxiki-command/find-file
   "Finds a file."
-  (let ((line-info (elxiki-line-get)))
-    (when (string-equal "* " (nth 0 line-info))
-      (find-file (concat (elxiki-context-get-dir context)
-                         (nth 1 line-info)))
-      t)))
+  (when (string-equal "* " (elxiki-context-get-prefix context))
+      (find-file (concat (elxiki-context-default-directory context)
+                         (elxiki-context-get-name context)))
+      t))
 
 (define-elxiki-command elxiki-command/run-code
   "Runs elisp code."
-  (let ((line-info (elxiki-line-get))
-        (default-directory (elxiki-context-get-dir context)))
-    (when (string-equal "! " (nth 0 line-info))
+  (let ((default-directory (elxiki-context-default-directory context)))
+    (when (string-equal "! " (elxiki-context-get-prefix context))
       (elxiki-line-add-children
        (mapcar
         (lambda (line) (concat "| " line))
         (split-string
          (pprint-to-string
-          (eval (read (nth 1 line-info))))
+          (eval (read (elxiki-context-get-name context))))
          "\n"
          'nonull)))
       t)))

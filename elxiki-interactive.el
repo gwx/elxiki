@@ -6,7 +6,7 @@
   (interactive)
   (when (elxiki-line-get)
     (let ((commands elxiki-command-list)
-          (context (elxiki-context-get (elxiki-line-get-ancestry))))
+          (context (elxiki-context-from-ancestry (elxiki-line-get-ancestry))))
       (while commands
         (if (funcall (car commands) context)
             (setq commands nil)
