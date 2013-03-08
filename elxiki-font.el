@@ -60,6 +60,14 @@
   '((t :inherit 'font-lock-builtin-face))
   "Face for the code prefix ( ! ) names.")
 
+(defface elxiki-heading-prefix-face
+  '((t :inherit 'font-lock-builtin-face))
+  "Face for the heading prefix ( > ).")
+
+(defface elxiki-heading-name-face
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.2))
+  "Face for the heading prefix ( > ) names.")
+
 ;;; Keyword Regexs
 (defvar elxiki-closed-regex
   (rx line-start (* blank) (group "+ ") (group (* nonl)))
@@ -89,22 +97,28 @@
   (rx line-start (* blank) (group "! ") (group (* nonl)))
   "Regular expression for the elxiki code face.")
 
+(defvar elxiki-heading-regex
+  (rx line-start (* blank) (group "> ") (group (* nonl)))
+  "Regular expression for the elxiki heading face.")
+
 ;;; Keyword Definition
 (defvar elxiki-mode-keywords
-  `((,elxiki-closed-regex 1 'elxiki-closed-prefix-face)
-    (,elxiki-closed-regex 2 'elxiki-closed-name-face)
-    (,elxiki-opened-regex 1 'elxiki-opened-prefix-face)
-    (,elxiki-opened-regex 2 'elxiki-opened-name-face)
-    (,elxiki-point-regex 1 'elxiki-point-prefix-face)
-    (,elxiki-point-regex 2 'elxiki-point-name-face)
-    (,elxiki-output-regex 1 'elxiki-output-prefix-face)
-    (,elxiki-output-regex 2 'elxiki-output-name-face)
-    (,elxiki-shell-regex 1 'elxiki-shell-prefix-face)
-    (,elxiki-shell-regex 2 'elxiki-shell-name-face)
-    (,elxiki-async-regex 1 'elxiki-async-prefix-face)
-    (,elxiki-async-regex 2 'elxiki-async-name-face)
-    (,elxiki-code-regex 1 'elxiki-code-prefix-face)
-    (,elxiki-code-regex 2 'elxiki-code-name-face))
+  `((,elxiki-closed-regex 1 'elxiki-closed-prefix-face t)
+    (,elxiki-closed-regex 2 'elxiki-closed-name-face t)
+    (,elxiki-opened-regex 1 'elxiki-opened-prefix-face t)
+    (,elxiki-opened-regex 2 'elxiki-opened-name-face t)
+    (,elxiki-point-regex 1 'elxiki-point-prefix-face t)
+    (,elxiki-point-regex 2 'elxiki-point-name-face t)
+    (,elxiki-output-regex 1 'elxiki-output-prefix-face t)
+    (,elxiki-output-regex 2 'elxiki-output-name-face t)
+    (,elxiki-shell-regex 1 'elxiki-shell-prefix-face t)
+    (,elxiki-shell-regex 2 'elxiki-shell-name-face t)
+    (,elxiki-async-regex 1 'elxiki-async-prefix-face t)
+    (,elxiki-async-regex 2 'elxiki-async-name-face t)
+    (,elxiki-code-regex 1 'elxiki-code-prefix-face t)
+    (,elxiki-code-regex 2 'elxiki-code-name-face t)
+    (,elxiki-heading-regex 1 'elxiki-heading-prefix-face t)
+    (,elxiki-heading-regex 2 'elxiki-heading-name-face t))
   "List to pass to `font-lock-add-keywords'.")
 
 (provide 'elxiki-font)

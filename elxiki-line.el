@@ -6,7 +6,7 @@
 
 ;;; Code:
 (defvar elxiki-line-prefix-list
-  '("| " "$ " "% " "+ " "- " "* " "! ")
+  '("| " "$ " "% " "+ " "- " "* " "! " "> ")
   "List of prefixes which are used by elxiki.")
 
 (defun elxiki/region (start length)
