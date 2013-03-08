@@ -47,7 +47,7 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
         (name (elxiki-context-get-name context)))
     (and default-directory
          (elxiki/ends-slash-p name)
-         (file-directory-p name))))
+         (file-directory-p default-directory))))
 
 (provide 'elxiki-context)
 ;;; elxiki-context.el ends here
