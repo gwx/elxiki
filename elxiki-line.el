@@ -63,7 +63,8 @@ valid elxiki line."
         (setq name (elxiki/trim (buffer-substring-no-properties start (point))))
         ;; Check for eligibility
         (when (or prefix
-                  (string-match (rx "/" (* blank) string-end) name))
+                  (string-match (rx "/" (* blank) string-end) name)
+                  (string-match (rx string-start (* blank) string-end) name))
           (list prefix name))))))
 
 (defun elxiki-line-get-name (&optional pos)
@@ -138,7 +139,8 @@ are no children, or POS is not at an elxiki line."
       (let ((start (point))
             (indent (current-indentation)))
         (while (and (elxiki-line-get)
-                    (>= (current-indentation) indent)
+                    (or (>= (current-indentation) indent)
+                        (elxiki/line-blank))
                     (= 0 (forward-line 1))))
         (if (and (elxiki-line-get)
                  (>= (current-indentation) indent))

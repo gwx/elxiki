@@ -14,6 +14,14 @@
                         path)
       (match-string 1 path))))
 
+(defun elxiki/line-blank (&optional pos)
+  "If the line at POS is blank.
+POS defaults to point."
+  (save-excursion
+    (when pos (goto-char pos))
+    (forward-line 0)
+    (looking-at-p (rx line-start (* blank) line-end))))
+
 (provide 'elxiki-util)
 
 ;;; elxiki-util.el ends here
