@@ -87,6 +87,7 @@ parent does not exist, or POS is not at an exiki line."
                       (elxiki/line-blank))
                   (= 0 (forward-line -1))))
       (when (and (elxiki-line-get)
+                 (< (current-indentation) indent)
                  (not (= (line-number-at-pos) line)))
         (forward-to-indentation 0)
         (point)))))
