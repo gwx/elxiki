@@ -17,7 +17,7 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
         (setq name (nth 1 ancestor))
         ;; Match things that end with /.
         (when (string-match (rx "/" (* blank) string-end) name)
-          (setq path (concat name path))))
+          (setq path (concat path name))))
       `((prefix . ,prefix)
         (name . ,name)
         (path . ,path)))))
