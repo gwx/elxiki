@@ -74,8 +74,9 @@ If the prefix is currently \"- \", change it to \"+ \"."
                      (concat "$ ./" line))
                     ('else
                      (concat "* " line)))))))
-    (elxiki-line-add-children
-     (mapcar line-prepare (directory-files default-directory)))))
+    (elxiki-line-add-children 
+     (directory-files default-directory)
+     line-prepare)))
 
 (elxiki-command-register 'elxiki-command/unfold-directory
                          'elxiki-command-directory-unfold-p)
@@ -92,9 +93,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (name (elxiki-context-get-name context))
         (line-prepare (lambda (line)
                         (concat "| " line))))
-    (elxiki-line-add-children
-     (mapcar line-prepare
-             (split-string (shell-command-to-string name) "\n" 'nonull)))
+    (elxiki-line-add-children (shell-command-to-string name) line-prepare)
     (message "Ran: %s" name)))
 
 (elxiki-command-register 'elxiki-command/unfold-shell
@@ -138,9 +137,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
   (let ((default-directory (elxiki-context-default-directory context))
         (name (elxiki-context-get-name context))
         (line-prepare (lambda (line) (concat "| " line))))
-    (elxiki-line-add-children
-     (mapcar line-prepare
-             (split-string (pprint-to-string (eval (read name))) "\n" 'nonull)))))
+    (elxiki-line-add-children (pprint-to-string (eval (read name))) 
+                              line-prepare)))
 
 (elxiki-command-register 'elxiki-command/unfold-emacs-lisp
                          'elxiki-command-emacs-lisp-p)
