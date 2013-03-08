@@ -30,6 +30,10 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
   "Retrieve the name from CONTEXT."
   (cdr (assoc 'name context)))
 
+(defun elxiki-context-get-path (context)
+  "Retrieve the path from CONTEXT."
+  (cdr (assoc 'path context)))
+
 (defun elxiki-context-default-directory (context)
   "Gets the default directory from CONTEXT."
   (let ((path (cdr (assoc 'path context))))

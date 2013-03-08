@@ -130,7 +130,7 @@ POS defaults to point."
 (defun elxiki-line-find-all-children (&optional pos)
   "Return the (start end) region of all children of elxiki line at POS.
 If POS is not specified, defaults to point.  Returns nil if there
-are no children, or POS is not at an exiki line."
+are no children, or POS is not at an elxiki line."
   (when (elxiki-line-find-child pos)
     (save-excursion
       (when pos (goto-char pos))
@@ -146,19 +146,43 @@ are no children, or POS is not at an exiki line."
           (forward-line 0))
         (list start (point))))))
 
-(defun elxiki-line-add-children (children &optional pos)
-  "Add CHILDREN underneath of the elxiki line at POS, properly indented.
-If POS is not specified, defaults to point.  Returns nil if POS
-is not an elxiki line."
+(defun elxiki-line-find-self (&optional pos)
+  "Return the (start end) region of line at POS and all its children.
+If POS is not specified, it defaults to point. Return nil if this
+is not a valid elxiki line."
   (save-excursion
     (when pos (goto-char pos))
     (when (elxiki-line-get)
-      (let ((prefix (apply 'concat
+      (let ((children (elxiki-line-find-all-children))
+            start end)
+        (forward-line 0)
+        (setq start (point))
+        (if children
+            (setq end (nth 1 children))
+          (end-of-line)
+          (setq end (point)))
+        (list start end)))))
+
+(defun elxiki-line-add-children (children &optional prefix-function pos)
+  "Add CHILDREN underneath of the elxiki line at POS, properly indented.
+CHILDREN can either be a string or a list of strings. If it is a
+string, it is converted into a list of strings by splitting on
+the newline character.  If PREFIX-FUNCTION is specified, then
+apply it to every line before using it. If POS is not specified,
+it defaults to point.  Returns nil if POS is not an elxiki line."
+  (save-excursion
+    (when pos (goto-char pos))
+    (when (stringp children)
+      (setq children (split-string children "\n" 'no-blanks)))
+    (when (elxiki-line-get)
+      (let ((blank-prefix (apply 'concat
                            (make-list (+ 2 (current-indentation)) " "))))
         (end-of-line)
         (dolist (child children)
+          (when (functionp prefix-function)
+            (setq child (funcall prefix-function child)))
           (insert "\n")
-          (insert prefix)
+          (insert blank-prefix)
           (insert child))))))
 
 (defun elxiki-line-set-prefix (prefix &optional pos)
