@@ -12,6 +12,7 @@
   "The home directory for elxiki.")
 (add-to-list 'load-path elxiki-dir)
 
+(require 'elxiki-util)
 (require 'elxiki-line)
 (require 'elxiki-context)
 (require 'elxiki-command)

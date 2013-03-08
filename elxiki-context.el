@@ -37,5 +37,13 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
         (expand-file-name path)
       default-directory)))
 
+(defun elxiki-context-directory-p (context)
+  "If CONTEXT describes a directory line (that exists)."
+  (let ((default-directory (elxiki-context-default-directory context))
+        (name (elxiki-context-get-name context)))
+    (and default-directory
+         (elxiki/ends-slash-p name)
+         (file-directory-p default-directory))))
+
 (provide 'elxiki-context)
 ;;; elxiki-context.el ends here

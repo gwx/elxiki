@@ -1,17 +1,6 @@
-;;; elxiki-interactive.el --- Interactive commands for use with elxiki.
+;;; elxiki-interactive.el --- Extra interactive commands for use with elxiki.
 
 ;;; Code:
-(defun elxiki-command ()
-  "Perform the proper elxiki command at point."
-  (interactive)
-  (when (elxiki-line-get)
-    (let ((commands elxiki-command-list)
-          (context (elxiki-context-from-ancestry (elxiki-line-get-ancestry))))
-      (while commands
-        (if (funcall (car commands) context)
-            (setq commands nil)
-          (setq commands (cdr commands)))))))
-
 (defun elxiki-copy-name (&optional pos)
   "Copies the name of the elxiki line at point to the kill ring."
   (interactive)
