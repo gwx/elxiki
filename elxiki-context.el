@@ -9,45 +9,76 @@
 (defun elxiki-context-from-ancestry (ancestry)
   "Takes a list of line infos and returns them as a context alist.
 ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
-  (save-match-data
-    (let ((path "")
-          prefix name)
-      (dolist (ancestor ancestry)
-        (setq prefix (nth 0 ancestor))
-        (setq name (nth 1 ancestor))
-        ;; Match things that end with /.
-        (when (string-match (rx "/" (* blank) string-end) name)
-          (setq path (concat path name))))
-      `((prefix . ,prefix)
-        (name . ,name)
-        (path . ,path)))))
+  (let (directory menu prefix name last-type)
+    (while ancestry
+      (setq prefix (caar ancestry))
+      (setq name (cadar ancestry))
+      (cond
+       ;; Absolute, so reset directory.
+       ((member (string-to-char name) '(?/ ?~))
+        (setq directory (expand-file-name name))
+        (setq last-type 'directory))
+       ;; If this is the first item and it starts with '.', treat it
+       ;; as a directory.
+       ((and (null last-type)
+             (= ?. (string-to-char name)))
+        (setq directory name)
+        (setq last-type 'directory))
+       ;; Either this is marked as a menu (@ prefix) or it is the
+       ;; first item and it isn't a directory, so it has to be a
+       ;; menu.
+       ((or (null last-type)
+            (string-equal "@ " prefix))
+        (setq menu name)
+        (setq last-type 'menu))
+       ;; Has a weird prefix, so don't do anything.
+       ((not (member prefix '("+ " "- " nil)))
+        (setq last-type 'misc))
+       ;; Append to directory.
+       ((eq 'directory last-type)
+        (setq directory (concat (file-name-as-directory directory) name)))
+       ;; Append to menu.
+       ((eq 'menu last-type)
+        (setq menu (concat (file-name-as-directory menu) name))))
+      (setq ancestry (cdr ancestry)))
+    (setq directory (file-name-as-directory directory))
+    (list prefix name directory menu (or last-type 'misc))))
 
 (defun elxiki-context-get-prefix (context)
   "Retrieve the prefix from CONTEXT."
-  (cdr (assoc 'prefix context)))
+  (nth 0 context))
 
 (defun elxiki-context-get-name (context)
   "Retrieve the name from CONTEXT."
-  (cdr (assoc 'name context)))
+  (nth 1 context))
 
-(defun elxiki-context-get-path (context)
-  "Retrieve the path from CONTEXT."
-  (cdr (assoc 'path context)))
+(defun elxiki-context-get-directory (context)
+  "Retrieve the directory from CONTEXT."
+  (nth 2 context))
 
-(defun elxiki-context-default-directory (context)
-  "Gets the default directory from CONTEXT."
-  (let ((path (cdr (assoc 'path context))))
-    (if (and path (member (string-to-char path) '(?. ?~ ?/)))
-        (expand-file-name path)
-      (expand-file-name default-directory))))
+(defun elxiki-context-get-menu (context)
+  "Retrieve the menu from CONTEXT."
+  (nth 3 context))
 
-(defun elxiki-context-directory-p (context)
-  "If CONTEXT describes a directory line (that exists)."
-  (let ((default-directory (elxiki-context-default-directory context))
-        (name (elxiki-context-get-name context)))
-    (and default-directory
-         (elxiki/ends-slash-p name)
-         (file-directory-p (expand-file-name default-directory)))))
+(defun elxiki-context-get-type (context)
+  "Return the type CONTEXT describes.
+Can be 'directory, 'menu, or 'misc."
+  (nth 4 context))
+
+;; (defun elxiki-context-default-directory (context)
+;;   "Gets the default directory from CONTEXT."
+;;   (let ((path (cdr (assoc 'path context))))
+;;     (if (and path (member (string-to-char path) '(?. ?~ ?/)))
+;;         (expand-file-name path)
+;;       (expand-file-name default-directory))))
+
+;; (defun elxiki-context-directory-p (context)
+;;   "If CONTEXT describes a directory line (that exists)."
+;;   (let ((default-directory (elxiki-context-default-directory context))
+;;         (name (elxiki-context-get-name context)))
+;;     (and default-directory
+;;          (elxiki/ends-slash-p name)
+;;          (file-directory-p (expand-file-name default-directory)))))
 
 (provide 'elxiki-context)
 ;;; elxiki-context.el ends here

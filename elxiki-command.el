@@ -43,9 +43,10 @@ precedence than other commands."
 
 ;;; Builtin Commands:
 
-(defun elxiki-command-children-p (context)
-  "Return non-nil if the line at point has children."
-  (elxiki-line-find-child))
+(defun elxiki-command-fold-p (context)
+  "Return non-nil if the line at point should fold."
+  (or (string-equal "- " (elxiki-context-get-prefix context))
+      (elxiki-line-find-child)))
 
 (defun elxiki-command/fold (context)
   "Remove all children from the elxiki line.
@@ -54,17 +55,17 @@ If the prefix is currently \"- \", change it to \"+ \"."
     (elxiki-line-set-prefix "+ "))
   (apply 'delete-region (elxiki-line-find-all-children)))
 
-(elxiki-command-register 'elxiki-command/fold 'elxiki-command-children-p)
+(elxiki-command-register 'elxiki-command/fold 'elxiki-command-fold-p)
 
 (defun elxiki-command-directory-unfold-p (context)
   "If CONTEXT a directory that can be unfolded."
-  (and (not (elxiki-command-children-p context))
-       (elxiki-context-directory-p context)))
+  (and (not (elxiki-line-find-child))
+       (eq 'directory (elxiki-context-get-type context))))
 
 (defun elxiki-command/unfold-directory (context)
   "Adds the directory's files as children lines."
   (elxiki-line-set-prefix "- ")
-  (let* ((default-directory (elxiki-context-default-directory context))
+  (let* ((default-directory (elxiki-context-get-directory context))
          (line-prepare
           (lambda (line)
             (let ((absolute (expand-file-name line)))
@@ -74,25 +75,23 @@ If the prefix is currently \"- \", change it to \"+ \"."
                      (concat "$ ./" line))
                     ('else
                      (concat "* " line)))))))
-    (elxiki-line-add-children 
-     (directory-files default-directory)
-     line-prepare)))
+    (elxiki-line-add-children (directory-files default-directory) 
+                              line-prepare)))
 
 (elxiki-command-register 'elxiki-command/unfold-directory
                          'elxiki-command-directory-unfold-p)
 
 (defun elxiki-command-shell-unfold-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-command-children-p context))
+  (and (not (elxiki-line-find-child))
        (string-equal "$ " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-shell (context)
   "Adds the output of the shell command as children lines."
-  (let ((default-directory (elxiki-context-default-directory context))
+  (let ((default-directory (elxiki-context-get-directory context))
         (shell-file-name "/bin/bash")
         (name (elxiki-context-get-name context))
-        (line-prepare (lambda (line)
-                        (concat "| " line))))
+        (line-prepare (lambda (line) (concat "| " line))))
     (elxiki-line-add-children (shell-command-to-string name) line-prepare)
     (message "Ran: %s" name)))
 
@@ -101,12 +100,12 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-async-shell-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-command-children-p context))
+  (and (not (elxiki-line-find-child))
        (string-equal "% " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/run-async (context)
   "Runs the elxiki line asynchronously."
-  (let ((default-directory (elxiki-context-default-directory context))
+  (let ((default-directory (elxiki-context-get-directory context))
         (shell-file-name "/bin/bash")
         (name (elxiki-context-get-name context)))
     (async-shell-command name)))
@@ -120,7 +119,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command/find-file (context)
   "Finds the file for the elxiki line."
-  (let ((default-directory (elxiki-context-default-directory context))
+  (let ((default-directory (elxiki-context-get-directory context))
         (name (elxiki-context-get-name context)))
     (find-file (expand-file-name name))))
 
@@ -129,12 +128,12 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-emacs-lisp-p (context)
   "If CONTEXT indicates an emacs lisp command that can be unfolded."
-  (and (not (elxiki-command-children-p context))
+  (and (not (elxiki-line-find-child))
        (string-equal "! " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-emacs-lisp (context)
   "Adds the output of the emacs lisp command as children lines."
-  (let ((default-directory (elxiki-context-default-directory context))
+  (let ((default-directory (elxiki-context-get-directory context))
         (name (elxiki-context-get-name context))
         (line-prepare (lambda (line) (concat "| " line))))
     (elxiki-line-add-children (pprint-to-string (eval (read name))) 

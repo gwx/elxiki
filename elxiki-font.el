@@ -60,6 +60,14 @@
   '((t :inherit 'font-lock-builtin-face))
   "Face for the code prefix ( ! ) names.")
 
+(defface elxiki-menu-prefix-face
+  '((t :inherit 'font-lock-function-name-face))
+  "Face for the menu prefix ( @ ).")
+
+(defface elxiki-menu-name-face
+  '((t :inherit 'font-lock-string-face))
+  "Face for the menu prefix ( @ ) names.")
+
 (defface elxiki-heading-prefix-face
   '((t :inherit 'font-lock-builtin-face))
   "Face for the heading prefix ( > ).")
@@ -97,6 +105,10 @@
   (rx line-start (* blank) (group "! ") (group (* nonl)))
   "Regular expression for the elxiki code face.")
 
+(defvar elxiki-menu-regex
+  (rx line-start (* blank) (group "@ ") (group (* nonl)))
+  "Regular expression for the elxiki menu face.")
+
 (defvar elxiki-heading-regex
   (rx line-start (* blank) (group "> ") (group (* nonl)))
   "Regular expression for the elxiki heading face.")
@@ -117,6 +129,8 @@
     (,elxiki-async-regex 2 'elxiki-async-name-face t)
     (,elxiki-code-regex 1 'elxiki-code-prefix-face t)
     (,elxiki-code-regex 2 'elxiki-code-name-face t)
+    (,elxiki-menu-regex 1 'elxiki-menu-prefix-face t)
+    (,elxiki-menu-regex 2 'elxiki-menu-name-face t)
     (,elxiki-heading-regex 1 'elxiki-heading-prefix-face t)
     (,elxiki-heading-regex 2 'elxiki-heading-name-face t))
   "List to pass to `font-lock-add-keywords'.")

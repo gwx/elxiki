@@ -6,7 +6,7 @@
 
 ;;; Code:
 (defvar elxiki-line-prefix-list
-  '("| " "$ " "% " "+ " "- " "* " "! " "> ")
+  '("| " "$ " "% " "+ " "- " "* " "! " "> " "@ ")
   "List of prefixes which are used by elxiki.")
 
 (defun elxiki/region (start length)
@@ -192,12 +192,15 @@ it defaults to point.  Returns nil if POS is not an elxiki line."
 (defun elxiki-line-set-prefix (prefix &optional pos)
   "Changes elxiki line at POS to have PREFIX.
 POS defaults to point."
-  (save-excursion
+  ;; `save-excursion' doesn't work if we're inside the prefix already,
+  ;; so save point manually.
+  (let ((old-pos (point)))
     (when pos (goto-char pos))
     (forward-to-indentation 0)
     (let ((old-prefix (elxiki-line-get-prefix)))
       (apply 'delete-region (elxiki/region (point) (length old-prefix)))
-      (insert prefix))))
+      (insert prefix))
+    (goto-char old-pos)))
 
 (defun elxiki-line-get-ancestry (&optional pos)
   "Gets the ancestry of elxiki line at POS.
