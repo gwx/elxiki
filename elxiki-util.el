@@ -1,5 +1,12 @@
 ;;; elxiki-util.el --- Various utility commands.
 
+(require 'pprint)
+
+(defun elxiki-wrap-text (string &optional width)
+  "Wraps STRING around target WIDTH."
+  (let ((string (pprint-to-string string width)))
+    (substring string 1 (1- (length string)))))
+
 (defun elxiki/ends-slash-p (string)
   "If STRING ends with a /, followed by whitespace."
   (save-match-data
@@ -31,6 +38,15 @@
   "Return non-nil if NAME1 and NAME2 are equal, disregarding a final /."
   (string-equal (elxiki/strip-slash name1)
                 (elxiki/strip-slash name2)))
+
+(defun elxiki/normalize-buffer-indentation ()
+  "Remove excess indentation from buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((indent (current-indentation)))
+      (indent-line-to 0)
+      (while (elxiki/forward-line)
+        (indent-line-to (max 0 (- (current-indentation) indent)))))))
 
 (defun elxiki/normalize-indentation (strings)
   "Left justify the list of STRINGS."

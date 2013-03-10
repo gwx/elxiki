@@ -135,19 +135,17 @@ Strips out spaces."
     (unless (eq 'directory (elxiki-context-get-type context))
       (elxiki-line-fold))))
 
-(defun elxiki-menu/prepare (string)
+(defun elxiki-menu/prepare (result)
   "Prepare a section of text for insertion.
 This involves aligning it and folding all children."
-  (when string
+  (when result
     (let (pos)
       (with-temp-buffer
-        (mapc (lambda (string) (insert string "\n"))
-              (elxiki/normalize-indentation
-               (split-string string "\n")))
+        (insert result)
+        (elxiki/normalize-buffer-indentation)
         (elxiki-menu/fold-if-not-directory)
         (goto-char (point-min))
-        (while (setq pos (elxiki-line-find-first-sibling))
-          (goto-char pos)
+        (while (elxiki-line-goto-first-sibling)
           (elxiki-menu/fold-if-not-directory))
         (buffer-substring-no-properties (point-min) (point-max))))))
 
