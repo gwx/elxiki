@@ -92,9 +92,9 @@ There are also several special menu names:
 The menu body is passed the following arguments:
 * prefix :: The prefix for the line being called.
 * name :: The rest of the line being called.
-* directory :: The directory the menu is being run inder.
-* menu :: The full menu path being called
-* type :: Should always be 'menu"
+* directory :: The directory the menu is being run under.
+* menu :: The full menu path being called.
+* type :: Should always be 'menu."
   (declare (indent defun))
   `(setq *elxiki-menu-functions*
          (cons (cons ',name (lambda ,elxiki-context-format ,@body))

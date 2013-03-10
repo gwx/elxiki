@@ -60,6 +60,14 @@
   '((t :inherit 'font-lock-builtin-face))
   "Face for the code prefix ( ! ) names.")
 
+(defface elxiki-code-silent-prefix-face
+  '((t :inherit 'font-lock-function-name-face))
+  "Face for the silent code prefix ( !! ).")
+
+(defface elxiki-code-silent-name-face
+  '((t :inherit 'font-lock-builtin-face))
+  "Face for the silent code prefix ( !! ) names.")
+
 (defface elxiki-menu-prefix-face
   '((t :inherit 'font-lock-function-name-face))
   "Face for the menu prefix ( @ ).")
@@ -105,6 +113,10 @@
   (rx line-start (* blank) (group "! ") (group (* nonl)))
   "Regular expression for the elxiki code face.")
 
+(defvar elxiki-code-silent-regex
+  (rx line-start (* blank) (group "!! ") (group (* nonl)))
+  "Regular expression for the elxiki code face.")
+
 (defvar elxiki-menu-regex
   (rx line-start (* blank) (group "@ ") (group (* nonl)))
   "Regular expression for the elxiki menu face.")
@@ -129,6 +141,8 @@
     (,elxiki-async-regex 2 'elxiki-async-name-face t)
     (,elxiki-code-regex 1 'elxiki-code-prefix-face t)
     (,elxiki-code-regex 2 'elxiki-code-name-face t)
+    (,elxiki-code-silent-regex 1 'elxiki-code-silent-prefix-face t)
+    (,elxiki-code-silent-regex 2 'elxiki-code-silent-name-face t)
     (,elxiki-menu-regex 1 'elxiki-menu-prefix-face t)
     (,elxiki-menu-regex 2 'elxiki-menu-name-face t)
     (,elxiki-heading-regex 1 'elxiki-heading-prefix-face t)

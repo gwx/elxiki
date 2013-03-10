@@ -17,6 +17,9 @@
   | - In a .menu.el file, which lets the menu run emacs lisp code.
   |   The theme menu is a good example:
   @ theme
+  |   You may also want to take a look at the documentation
+  |   for defmenu:
+  !| (describe-function 'defmenu)
   > Here are all the defined menus:
   @ all/
 + Using Menus

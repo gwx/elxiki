@@ -142,6 +142,20 @@ If the prefix is currently \"- \", change it to \"+ \"."
 (elxiki-command-register 'elxiki-command/unfold-emacs-lisp
                          'elxiki-command-emacs-lisp-p)
 
+(defun elxiki-command-silent-emacs-lisp-p (context)
+  "If CONTEXT indicates a silent emacs lisp command that can be run."
+  (and (not (elxiki-line-find-first-child))
+       (string-equal "!! " (elxiki-context-get-prefix context))))
+
+(defun elxiki-command/silent-run-emacs-lisp (context)
+  "Runs an emacs lisp command."
+  (let ((default-directory (elxiki-context-get-directory context))
+        (name (elxiki-context-get-name context)))
+    (eval (read name))))
+
+(elxiki-command-register 'elxiki-command/silent-run-emacs-lisp
+                         'elxiki-command-silent-emacs-lisp-p)
+
 (defun elxiki-command-menu-act-p (context)
   "If CONTEXT indicates a menu to act upon."
   (and (not (elxiki-line-find-first-child))

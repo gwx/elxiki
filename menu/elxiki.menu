@@ -25,6 +25,9 @@
   | ! runs elisp code.
   ! load-path
   | 
+  | !! runs elisp code, but doesn't print the output.
+  !! (describe-function 'elxiki-mode)
+  | 
   | $ Runs a shell command.
   $ ls -la /
   | 
