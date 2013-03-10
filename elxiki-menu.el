@@ -97,7 +97,8 @@ The menu body is passed the following arguments:
 * type :: Should always be 'menu."
   (declare (indent defun))
   `(setq *elxiki-menu-functions*
-         (cons (cons ',name (lambda ,elxiki-context-format ,@body))
+         (cons (cons ',(intern (elxiki/strip-slash (symbol-name name)))
+                     (lambda ,elxiki-context-format ,@body))
                *elxiki-menu-functions*)))
 
 (let ((regex (rx "(" (group "defmenu")
@@ -117,6 +118,7 @@ The menu body is passed the following arguments:
 (defun elxiki-menu/to-function-name (menu-item)
   "Convert MENU-ITEM to the corresponding function name.
 Strips out spaces."
+  (setq menu-item (elxiki/strip-slash menu-item))
   (intern
    (replace-regexp-in-string " " "" menu-item)))
 
@@ -152,11 +154,10 @@ This involves aligning it and folding all children."
 (defun elxiki-menu-act (context)
   "Do the menu action described by CONTEXT and return the resulting text."
   (let ((menu (elxiki-menu-load context))
-        (inner-path (elxiki/drop-root (elxiki-context-get-menu context)))
+        (inner-path (elxiki-drop-root (elxiki-context-get-menu context)))
         item-function result)
     (unwind-protect
         (when menu
-          (setq item-function (elxiki-menu-get-action menu inner-path))
           (cond
            ;; Treat the root menu specially.
            ((string-equal "" inner-path)
@@ -167,7 +168,7 @@ This involves aligning it and folding all children."
                     (with-current-buffer (elxiki-menu-get-buffer menu)
                       (buffer-substring-no-properties (point-min) (point-max))))))
            ;; There is a function defined for this action, so do it.
-           (item-function
+           ((setq item-function (elxiki-menu-get-action menu inner-path))
             (setq result (apply item-function context)))
            ;; There is an _undefined action, so do that instead.
            ((setq item-function (elxiki-menu-get-action menu "_undefined"))
@@ -206,7 +207,7 @@ before editing."
 ;;   (interactive)
 ;;   (let* ((context (elxiki-context-from-ancestry (elxiki-line-get-ancestry)))
 ;;          (menu (elxiki-menu-load context 'force))
-;;          (inner-path (elxiki/drop-root (elxiki-context-get-menu context)))
+;;          (inner-path (elxiki-drop-root (elxiki-context-get-menu context)))
 ;;          (children (elxiki-line-find-all-children))
 ;;          (buffer (elxiki-menu-get-buffer menu))
 ;;          start)

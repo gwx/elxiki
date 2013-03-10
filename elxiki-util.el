@@ -7,6 +7,25 @@
   (let ((string (pprint-to-string string width)))
     (substring string 1 (1- (length string)))))
 
+(defun elxiki-prefix-buffer (string)
+  "Add STRING as a prefix to every line in the buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (insert string)
+    (while (elxiki/forward-line)
+      (insert string))))
+
+(defun elxiki-prefix-p (prefix string)
+  "Return non-nil if PREFIX is a prefix of STRING."
+  (and (>= (length string) (length prefix))
+       (string-equal prefix
+                     (substring string 0 (length prefix)))))
+
+(defun elxiki-drop-prefix (prefix string)
+  "Remove PREFIX from STRING. Return nil if unable to do so."
+  (when (elxiki-prefix-p prefix string)
+    (substring string (length prefix))))
+
 (defun elxiki/ends-slash-p (string)
   "If STRING ends with a /, followed by whitespace."
   (save-match-data
@@ -27,7 +46,7 @@
                         path)
       (match-string 1 path))))
 
-(defun elxiki/drop-root (path)
+(defun elxiki-drop-root (path)
   "Remove the first element of PATH."
   (replace-regexp-in-string
    (rx string-start (* (not (any "/"))) (? "/"))
