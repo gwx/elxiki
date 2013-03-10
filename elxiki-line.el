@@ -367,9 +367,9 @@ defaults to point."
   (save-excursion
     (when pos (goto-char pos))
     (let ((children (elxiki-line-find-all-children)))
+      (when (string-equal "- " (elxiki-line-get-prefix))
+        (elxiki-line-set-prefix "+ "))
       (when children
-        (when (string-equal "- " (elxiki-line-get-prefix))
-          (elxiki-line-set-prefix "+ "))
         (apply 'delete-region children)))))
 
 (defun elxiki-line-get-ancestry (&optional pos)

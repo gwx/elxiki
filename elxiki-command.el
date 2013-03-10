@@ -220,7 +220,10 @@ If the prefix is currently \"- \", change it to \"+ \"."
     (when (or (elxiki-context-menu-root-p context)
               (not prefix))
       (elxiki-line-set-prefix "@ "))
-    (elxiki-line-add-children (elxiki-menu-act context))))
+    (elxiki-line-add-children (elxiki-menu-act context))
+    (unless (elxiki-line-find-first-child)
+      (when (string-equal "- " (elxiki-line-get-prefix))
+        (elxiki-line-set-prefix "+ ")))))
 
 (elxiki-command-register 'elxiki-command/menu-act
                          'elxiki-command-menu-act-p)
