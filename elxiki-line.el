@@ -171,8 +171,11 @@ POS is not at an elxiki line."
       (while (and (elxiki/forward-line)
                   (or (elxiki/line-blank)
                       (>= (current-indentation) indent))))
-      (unless (elxiki/forward-line)
-        (end-of-line))
+      (if (< (current-indentation) indent)
+          (progn (forward-line 0)
+                 (point))
+        (unless (elxiki/forward-line)
+          (end-of-line)))
       (when (not (= start (point)))
         (point)))))
 
