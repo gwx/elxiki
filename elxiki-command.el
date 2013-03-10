@@ -104,7 +104,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
                     ((file-executable-p absolute)
                      (concat "$ ./" line))
                     ('else
-                     (concat "* " line)))))))
+                     (concat "& " line)))))))
     (elxiki-line-add-children (directory-files default-directory) 
                               line-prepare)))
 
@@ -121,7 +121,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
                     ((file-executable-p absolute)
                      (concat "$ ./" line))
                     ('else
-                     (concat "* " line)))))))
+                     (concat "& " line)))))))
     (elxiki-line-add-children (directory-files default-directory nil regex)
                               line-prepare)))
 
@@ -166,7 +166,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-find-p (context)
   "If CONTEXT indicates a file to be found."
-  (string-equal "* " (elxiki-context-get-prefix context)))
+  (string-equal "& " (elxiki-context-get-prefix context)))
 
 (defun elxiki-command/find-file (context)
   "Finds the file for the elxiki line."

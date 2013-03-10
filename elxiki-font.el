@@ -22,11 +22,11 @@
 
 (defface elxiki-point-prefix-face
   '((t :inherit (variable-pitch shadow) :height 1.3))
-  "Face for the point prefix ( * ).")
+  "Face for the point prefix ( & ).")
 
 (defface elxiki-point-name-face
   '((t :inherit 'variable-pitch :height 1.15))
-  "Face for the point prefix ( * ) names.")
+  "Face for the point prefix ( & ) names.")
 
 (defface elxiki-output-prefix-face
   '((t :inherit 'shadow))
@@ -94,7 +94,7 @@
   "Regular expression for the elxiki opened face.")
 
 (defvar elxiki-point-regex
-  (rx line-start (* blank) (group "* ") (group (* nonl)))
+  (rx line-start (* blank) (group "& ") (group (* nonl)))
   "Regular expression for the elxiki point face.")
 
 (defvar elxiki-output-regex

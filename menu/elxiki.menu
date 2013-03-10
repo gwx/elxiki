@@ -35,8 +35,8 @@
     | % Runs a shell command asynchronously.
     % top
     |
-    | * Finds a file.
-    * /home
+    | & Finds a file.
+    & /home
   + Directories:
     | You can also open directories. Elxiki sees anything 
     | starting with /, ~, or . as a directory. Use <C-return>
