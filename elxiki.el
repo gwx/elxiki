@@ -25,6 +25,7 @@
 
 (define-key elxiki-mode-map (kbd "C-<return>") 'elxiki-command)
 (define-key elxiki-mode-map (kbd "M-<return>") 'elxiki-command)
+(define-key elxiki-mode-map (kbd "C-c [") 'elxiki-menu-edit)
 
 (define-minor-mode elxiki-mode nil
   :lighter " ElXiKi"

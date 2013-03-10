@@ -48,7 +48,7 @@ precedence than other commands."
 (defun elxiki-command-fold-p (context)
   "Return non-nil if the line at point should fold."
   (or (string-equal "- " (elxiki-context-get-prefix context))
-      (elxiki-line-find-child)))
+      (elxiki-line-find-first-child)))
 
 (defun elxiki-command/fold (context)
   "Remove all children from the elxiki line.
@@ -59,7 +59,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-directory-unfold-p (context)
   "If CONTEXT a directory that can be unfolded."
-  (and (not (elxiki-line-find-child))
+  (and (not (elxiki-line-find-first-child))
        (eq 'directory (elxiki-context-get-type context))))
 
 (defun elxiki-command/unfold-directory (context)
@@ -83,7 +83,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-shell-unfold-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-line-find-child))
+  (and (not (elxiki-line-find-first-child))
        (string-equal "$ " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-shell (context)
@@ -100,7 +100,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-async-shell-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-line-find-child))
+  (and (not (elxiki-line-find-first-child))
        (string-equal "% " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/run-async (context)
@@ -128,7 +128,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-emacs-lisp-p (context)
   "If CONTEXT indicates an emacs lisp command that can be unfolded."
-  (and (not (elxiki-line-find-child))
+  (and (not (elxiki-line-find-first-child))
        (string-equal "! " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-emacs-lisp (context)
@@ -144,7 +144,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-menu-act-p (context)
   "If CONTEXT indicates a menu to act upon."
-  (and (not (elxiki-line-find-child))
+  (and (not (elxiki-line-find-first-child))
        (eq 'menu (elxiki-context-get-type context))))
 
 (defun elxiki-command/menu-act (context)
@@ -159,7 +159,6 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (elxiki-command-register 'elxiki-command/menu-act
                          'elxiki-command-menu-act-p)
-    
 
 (provide 'elxiki-command)
 

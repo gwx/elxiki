@@ -45,6 +45,9 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
       (setq directory (file-name-as-directory directory)))
     (list prefix name directory menu (or last-type 'misc))))
 
+(defvar elxiki-context-format
+  '(prefix name directory menu type))
+
 (defun elxiki-context-get-prefix (context)
   "Retrieve the prefix from CONTEXT."
   (nth 0 context))

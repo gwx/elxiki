@@ -1,2 +1,2 @@
-(defmenu root
+(defmenu _root
   (zone))

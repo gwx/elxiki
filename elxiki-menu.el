@@ -34,35 +34,68 @@ Checks for MENU.menu and MENU.menu.el in all folders in path."
             (setq menu-path (cdr menu-path))))))
     file))
 
-(defun elxiki-menu-load (context)
+(defun elxiki-menu-load (context &optional force)
   "Load the menu described by CONTEXT so it is ready to process.
-Return a description of the menu."
+Return a description of the menu. If FORCE is non-nil, load an
+empty menu if it does not exist."
   (let* ((root-menu-name (elxiki/path-root (elxiki-context-get-menu context)))
          (menu-file (elxiki-menu-find root-menu-name))
          buffer)
-    (when menu-file
+    (cond
+     (menu-file
       (setq buffer (generate-new-buffer elxiki-menu-buffer-name-prefix))
       (cond
        ;; .menu file (text only)
        ((string-equal "menu" (file-name-extension menu-file))
         (with-current-buffer buffer
           (insert-file-contents menu-file))
-        (list buffer))
+        (list buffer nil menu-file))
        ;; .el file (functions)
        ((string-equal "el" (file-name-extension menu-file))
         (let (*elxiki-menu-functions* text-fun)
           (load menu-file t t)
-          (setq text-fun (cdr (assoc 'text *elxiki-menu-functions*)))
+          (setq text-fun (cdr (assoc '_init *elxiki-menu-functions*)))
           (when text-fun
             (with-current-buffer buffer
-              (insert (funcall text-fun context))))
-          (list buffer *elxiki-menu-functions*)))))))
+              (insert (apply text-fun context))))
+          (list buffer *elxiki-menu-functions* menu-file)))))
+     (force
+      (list (generate-new-buffer elxiki-menu-buffer-name-prefix) 
+            nil
+            (concat (file-name-as-directory elxiki-menu-directory)
+                    (concat root-menu-name ".menu")))))))
 
 (defmacro defmenu (name &rest body)
-  "Define a menu item. For use in .menu.el files."
+  "Define a menu item. For use in .menu.el files.
+
+When a menu item is opened, if there is a method attached to that
+name, then that method is called, and the resulting string is
+what is attached under the item being opened. Menus are named
+according to their full path, with spaces stripped. For example:
+
++ Start/
+  + Item A/
+  + Item B/
+
+'Item A' can be defined with (defmenu Start/ItemA ...).
+
+There are also several special menu names:
+* _init is called every time any item in the hierarchy is
+  opened. Its return value is used as the text for the menu.
+* _root is called when the top level item is opened. Its return
+  value will override that of _init. Use this if you want to
+  define a simple menu command. For instance, see the 'zone'
+  menu.
+
+The menu body is passed the following arguments:
+* prefix :: The prefix for the line being called.
+* name :: The rest of the line being called.
+* directory :: The directory the menu is being run inder.
+* menu :: The full menu path being called
+* type :: Should always be 'menu"
   (declare (indent defun))
   `(setq *elxiki-menu-functions*
-         (cons (cons ',name (lambda (context) ,@body))
+         (cons (cons ',name (lambda ,elxiki-context-format ,@body))
                *elxiki-menu-functions*)))
 
 (let ((regex (rx "(" (group "defmenu")
@@ -90,20 +123,30 @@ Strips out spaces."
   (cdr (assoc (elxiki-menu/to-function-name action)
               (cadr menu))))
 
+(defun elxiki-menu-get-file (menu)
+  "Return the file backing MENU."
+  (nth 2 menu))
+
 (defun elxiki-menu/prepare (string)
   "Prepare a section of text for insertion.
 This involves aligning it and folding all children."
   (when string
-    (let (pos)
+    (let ((try-fold 
+           (lambda ()
+             (let ((context (elxiki-context-from-ancestry
+                             (elxiki-line-get-ancestry))))
+               (unless (eq 'directory (elxiki-context-get-type context))
+                 (elxiki-line-fold)))))
+          pos)
       (with-temp-buffer
         (mapc (lambda (string) (insert string "\n"))
               (elxiki/normalize-indentation
                (split-string string "\n")))
+        (funcall try-fold)
         (goto-char (point-min))
-        (elxiki-line-fold)
-        (while (setq pos (elxiki-line-find-sibling))
+        (while (setq pos (elxiki-line-find-first-sibling))
           (goto-char pos)
-          (elxiki-line-fold))
+          (funcall try-fold))
         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun elxiki-menu-act (context)
@@ -117,22 +160,20 @@ This involves aligning it and folding all children."
           (cond
            ;; Treat the root menu specially.
            ((string-equal "" inner-path)
-            (setq item-function (elxiki-menu-get-action menu "root"))
+            (setq item-function (elxiki-menu-get-action menu "_root"))
             (if item-function
-                (setq result (funcall item-function context))
+                (setq result (apply item-function context))
               (setq result
                     (with-current-buffer (elxiki-menu-get-buffer menu)
                       (buffer-substring-no-properties (point-min) (point-max))))))
            ;; There is a function defined for this action, so do it.
            (item-function
-            (setq result (funcall item-function context)))
+            (setq result (apply item-function context)))
            ;; No function, so just read from buffer.
            ('else
             (with-current-buffer (elxiki-menu-get-buffer menu)
               (goto-char (point-min))
-              (goto-char
-               (elxiki-line-follow-route
-                (split-string inner-path "/" 'noempty)))
+              (elxiki-line-goto-route inner-path)
               (let ((children (elxiki-line-find-all-children)))
                 (when children
                   (setq result
@@ -140,6 +181,54 @@ This involves aligning it and folding all children."
           (elxiki-menu/prepare result))
       (when menu
         (elxiki-menu-dispose menu)))))
+
+(defun elxiki-menu-edit ()
+  "Edit the menu at point."
+  (interactive)
+  (let* ((context (elxiki-context-from-ancestry (elxiki-line-get-ancestry)))
+         (menu (elxiki-menu-load context 'force)))
+    (unwind-protect
+        (find-file (elxiki-menu-get-file menu))
+      (elxiki-menu-dispose menu))))
+
+;; (defun elxiki-menu-save ()
+;;   "Save the (sub)menu at point."
+;;   (interactive)
+;;   (let* ((context (elxiki-context-from-ancestry (elxiki-line-get-ancestry)))
+;;          (menu (elxiki-menu-load context 'force))
+;;          (inner-path (elxiki/drop-root (elxiki-context-get-menu context)))
+;;          (children (elxiki-line-find-all-children))
+;;          (buffer (elxiki-menu-get-buffer menu))
+;;          start)
+;;     (unwind-protect
+;;         (save-restriction
+;;           (save-excursion
+;;             (if (string-equal (file-name-extension (elxiki-menu-get-file menu))
+;;                               "el")
+;;                 (message "Can't save menus with code.")
+;;               (when children
+;;                 (apply 'narrow-to-region children))
+;;               (goto-char (point-min))
+;;               (with-current-buffer buffer
+;;                 (goto-char (point-min))
+;;                 (apply 'narrow-to-region (elxiki-line-find-self)))
+;;               (while (not (= (point-max) (point)))
+;;                 (if (elxiki-line-find-first-child
+                  
+
+;;             (if (= 0 (length inner-path))
+;;                 (progn
+;;                   (delete-region (point-min) (point-max))
+;;                   (mapc (lambda (string) (insert string "\n"))
+;;                         (elxiki/normalize-indentation
+;;                          (split-string children "\n"))))
+;;               (elxiki-line-goto-route inner-path 'create)
+;;               (elxiki-line-fold)
+;;               (elxiki-line-add-children children))
+;;             (write-region nil nil (elxiki-menu-get-file menu) 
+;;                           nil 'no-message))
+;;           (message "Saved Menu: %s" (elxiki-context-get-menu context)))
+;;       (elxiki-menu-dispose menu))))
 
 (defun elxiki-menu-all ()
   "Return a list of all menu names."

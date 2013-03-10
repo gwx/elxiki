@@ -27,13 +27,22 @@
    ""
    path))
 
+(defun elxiki/name-equal (name1 name2)
+  "Return non-nil if NAME1 and NAME2 are equal, disregarding a final /."
+  (string-equal (elxiki/strip-slash name1)
+                (elxiki/strip-slash name2)))
+
 (defun elxiki/normalize-indentation (strings)
   "Left justify the list of STRINGS."
   (let ((indent (with-temp-buffer
                   (insert (car strings))
                   (goto-char (point-min))
                   (current-indentation))))
-    (mapcar (lambda (string) (substring string indent))
+    (mapcar (lambda (string) 
+              (with-temp-buffer
+                (insert string)
+                (indent-line-to (max 0 (- (current-indentation) indent)))
+                (buffer-string)))
             strings)))
 
 (defun elxiki/line-blank (&optional pos)
@@ -43,6 +52,20 @@ POS defaults to point."
     (when pos (goto-char pos))
     (forward-line 0)
     (looking-at-p (rx line-start (* blank) line-end))))
+
+(defun elxiki/indentaion ()
+  "Get the current indentation."
+  (if (elxiki/line-blank)
+      most-positive-fixnum
+    (current-indentation)))
+
+(defun elxiki/forward-line ()
+  "Move forward 1 line. Return non-nil if it succeeds."
+  (forward-line 0)
+  (let ((pos (point)))
+    (forward-line 1)
+    (forward-line 0)
+    (not (= pos (point)))))
 
 (provide 'elxiki-util)
 
