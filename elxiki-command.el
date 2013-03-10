@@ -217,7 +217,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (prefix (elxiki-context-get-prefix context)))
     (when (string-equal "+ " prefix)
       (elxiki-line-set-prefix "- "))
-    (when (elxiki-context-menu-root-p context)
+    (when (or (elxiki-context-menu-root-p context)
+              (not prefix))
       (elxiki-line-set-prefix "@ "))
     (elxiki-line-add-children (elxiki-menu-act context))))
 
