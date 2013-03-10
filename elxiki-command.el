@@ -4,6 +4,8 @@
 ;; Defines the different actions that `elxiki-command' might take.
 
 (require 'elxiki-line)
+(require 'elxiki-context)
+(require 'elxiki-menu)
 
 ;;; Code:
 (defvar elxiki-command-alist nil
@@ -51,9 +53,7 @@ precedence than other commands."
 (defun elxiki-command/fold (context)
   "Remove all children from the elxiki line.
 If the prefix is currently \"- \", change it to \"+ \"."
-  (when (string-equal "- " (elxiki-context-get-prefix context))
-    (elxiki-line-set-prefix "+ "))
-  (apply 'delete-region (elxiki-line-find-all-children)))
+  (elxiki-line-fold))
 
 (elxiki-command-register 'elxiki-command/fold 'elxiki-command-fold-p)
 
@@ -142,5 +142,25 @@ If the prefix is currently \"- \", change it to \"+ \"."
 (elxiki-command-register 'elxiki-command/unfold-emacs-lisp
                          'elxiki-command-emacs-lisp-p)
 
+(defun elxiki-command-menu-act-p (context)
+  "If CONTEXT indicates a menu to act upon."
+  (and (not (elxiki-line-find-child))
+       (eq 'menu (elxiki-context-get-type context))))
+
+(defun elxiki-command/menu-act (context)
+  "Performs the given menu action."
+  (let ((default-directory (elxiki-context-get-directory context))
+        (prefix (elxiki-context-get-prefix context)))
+    (when (string-equal "+ " prefix)
+      (elxiki-line-set-prefix "- "))
+    (when (elxiki-context-menu-root-p context)
+      (elxiki-line-set-prefix "@ "))
+    (elxiki-line-add-children (elxiki-menu-act context))))
+
+(elxiki-command-register 'elxiki-command/menu-act
+                         'elxiki-command-menu-act-p)
+    
+
 (provide 'elxiki-command)
+
 ;;; elxiki-command.el ends here

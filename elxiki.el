@@ -15,6 +15,7 @@
 (require 'elxiki-util)
 (require 'elxiki-line)
 (require 'elxiki-context)
+(require 'elxiki-menu)
 (require 'elxiki-command)
 (require 'elxiki-font)
 (require 'elxiki-interactive)

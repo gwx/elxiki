@@ -111,12 +111,15 @@ If POS is not specified, defaults to point.  Returns nil if the
 sibling does not exist, or POS is not at an elxiki line."
   (save-excursion
     (when pos (goto-char pos))
-    (let ((indent (current-indentation)))
+    (forward-line 0)
+    (let ((indent (current-indentation))
+          (start (point)))
       (while (and (elxiki-line-get)
-                  (forward-to-indentation 1)
+                  (= 0 (forward-line 1))
                   (> (current-indentation) indent)))
       (when (and (elxiki-line-get)
-                 (= (current-indentation) indent))
+                 (= (current-indentation) indent)
+                 (not (= start (point))))
         (point)))))
 
 (defun elxiki-line-do-all-children (function &optional pos)
@@ -189,6 +192,33 @@ it defaults to point.  Returns nil if POS is not an elxiki line."
           (insert blank-prefix)
           (insert child))))))
 
+(defun elxiki-line-follow-route (route &optional pos)
+  "Return the elxiki line position that results from following ROUTE.
+If POS is defined, start from there, otherwise start from point.
+ROUTE is a list of strings. Finds each child named by the each
+element of ROUTE in turn."
+  (let (fail target-name)
+    (save-excursion
+      (when pos (goto-char pos))
+      (while (and (not fail)
+                  route)
+        (setq target-name (elxiki/strip-slash (car route)))
+        (while (and (not (string-equal
+                          (elxiki/strip-slash (elxiki-line-get-name))
+                          target-name))
+                    (setq pos (elxiki-line-find-sibling))
+                    (goto-char pos)))
+        (if (and (string-equal
+                  target-name
+                  (elxiki/strip-slash (elxiki-line-get-name)))
+                 (or (not (cdr route))
+                     (setq pos (elxiki-line-find-child))))
+            (progn
+              (setq route (cdr route))
+              (when pos (goto-char pos)))
+          (setq fail t)))
+      (if fail nil (point)))))
+
 (defun elxiki-line-set-prefix (prefix &optional pos)
   "Changes elxiki line at POS to have PREFIX.
 POS defaults to point."
@@ -201,6 +231,18 @@ POS defaults to point."
       (apply 'delete-region (elxiki/region (point) (length old-prefix)))
       (insert prefix))
     (goto-char old-pos)))
+
+(defun elxiki-line-fold (&optional pos)
+  "Remove all children from the elxiki line at POS.
+If the prefix is currently \"- \", change it to \"+ \".  POS
+defaults to point."
+  (save-excursion
+    (when pos (goto-char pos))
+    (let ((children (elxiki-line-find-all-children)))
+      (when children
+        (when (string-equal "- " (elxiki-line-get-prefix))
+          (elxiki-line-set-prefix "+ "))
+        (apply 'delete-region children)))))
 
 (defun elxiki-line-get-ancestry (&optional pos)
   "Gets the ancestry of elxiki line at POS.

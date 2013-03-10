@@ -24,6 +24,9 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
              (= ?. (string-to-char name)))
         (setq directory name)
         (setq last-type 'directory))
+       ;; Has a weird prefix, so don't do anything.
+       ((not (member prefix '("@ " "+ " "- " nil)))
+        (setq last-type 'misc))
        ;; Either this is marked as a menu (@ prefix) or it is the
        ;; first item and it isn't a directory, so it has to be a
        ;; menu.
@@ -31,9 +34,6 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
             (string-equal "@ " prefix))
         (setq menu name)
         (setq last-type 'menu))
-       ;; Has a weird prefix, so don't do anything.
-       ((not (member prefix '("+ " "- " nil)))
-        (setq last-type 'misc))
        ;; Append to directory.
        ((eq 'directory last-type)
         (setq directory (concat (file-name-as-directory directory) name)))
@@ -41,7 +41,8 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
        ((eq 'menu last-type)
         (setq menu (concat (file-name-as-directory menu) name))))
       (setq ancestry (cdr ancestry)))
-    (setq directory (file-name-as-directory directory))
+    (when directory
+      (setq directory (file-name-as-directory directory)))
     (list prefix name directory menu (or last-type 'misc))))
 
 (defun elxiki-context-get-prefix (context)
@@ -54,7 +55,7 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
 
 (defun elxiki-context-get-directory (context)
   "Retrieve the directory from CONTEXT."
-  (nth 2 context))
+  (or (nth 2 context) default-directory))
 
 (defun elxiki-context-get-menu (context)
   "Retrieve the menu from CONTEXT."
@@ -64,6 +65,10 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
   "Return the type CONTEXT describes.
 Can be 'directory, 'menu, or 'misc."
   (nth 4 context))
+
+(defun elxiki-context-menu-root-p (context)
+  "Return non-nil of CONTEXT describes a root level menu."
+  (= 1 (length (split-string (elxiki-context-get-menu context) "/" 'noempty))))
 
 ;; (defun elxiki-context-default-directory (context)
 ;;   "Gets the default directory from CONTEXT."
