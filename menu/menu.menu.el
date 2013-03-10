@@ -20,10 +20,11 @@
   |   You may also want to take a look at the documentation
   |   for defmenu:
   !! (describe-function 'defmenu)
-  > Here are all the defined menus:
-  @ all/
 + Using Menus
   | Menus are explicitly declared with an @ prefix. This can
   | usually be skipped, unless you want to link from one menu
   | to another.
+| 
+> Here are all the defined menus:
+@ all/
 ")
