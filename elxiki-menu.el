@@ -25,7 +25,7 @@ Checks for MENU.menu and MENU.menu.el in all folders in path."
   (let ((menu-path elxiki-menu-path)
         file)
     (while (and menu-path (not file))
-      (let ((name (concat (car menu-path) root-menu-name ".menu")))
+      (let ((name (concat (car menu-path) menu ".menu")))
         (if (file-exists-p name)
             (setq file name)
           (setq name (concat name ".el"))

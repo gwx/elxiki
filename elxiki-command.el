@@ -218,8 +218,10 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (prefix (elxiki-context-get-prefix context)))
     (when (string-equal "+ " prefix)
       (elxiki-line-set-prefix "- "))
-    (when (or (elxiki-context-menu-root-p context)
-              (not prefix))
+    (when (and (or (elxiki-context-menu-root-p context)
+                   (= 0 (length prefix)))
+               (elxiki-menu-find (elxiki/path-root 
+                                  (elxiki-context-get-menu context))))
       (elxiki-line-set-prefix "@ "))
     (elxiki-line-add-children (elxiki-menu-act context))
     (unless (elxiki-line-find-first-child)

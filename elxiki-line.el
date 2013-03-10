@@ -64,6 +64,7 @@ valid elxiki line."
         ;; Check for eligibility
         (when (or prefix
                   (string-match (rx "/" (* blank) string-end) name)
+                  (string-match (rx string-start (not blank)) name)
                   (string-match (rx string-start (* blank) string-end) name))
           (list prefix name))))))
 
