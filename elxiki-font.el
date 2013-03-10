@@ -5,27 +5,27 @@
   "If nil, elxiki will not modify fonts when turned on.")
 
 (defface elxiki-closed-prefix-face
-  '((t :inherit 'font-lock-function-name-face))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
   "Face for the closed prefix ( + ).")
 
 (defface elxiki-closed-name-face
-  '((t :inherit 'font-lock-string-face))
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
   "Face for the closed prefix ( + ) names.")
 
 (defface elxiki-opened-prefix-face
-  '((t :inherit 'shadow))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
   "Face for the opened prefix ( - ).")
 
 (defface elxiki-opened-name-face
-  '((t :inherit 'font-lock-string-face))
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
   "Face for the opened prefix ( - ) names.")
 
 (defface elxiki-point-prefix-face
-  '((t :inherit 'shadow))
+  '((t :inherit (variable-pitch shadow) :height 1.3))
   "Face for the point prefix ( * ).")
 
 (defface elxiki-point-name-face
-  '((t :inherit 'default))
+  '((t :inherit 'variable-pitch :height 1.15))
   "Face for the point prefix ( * ) names.")
 
 (defface elxiki-output-prefix-face
@@ -65,15 +65,15 @@
   "Face for the menu prefix ( @ ).")
 
 (defface elxiki-menu-name-face
-  '((t :inherit 'font-lock-string-face))
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
   "Face for the menu prefix ( @ ) names.")
 
 (defface elxiki-heading-prefix-face
-  '((t :inherit 'font-lock-builtin-face))
+  '((t :inherit (variable-pitch font-lock-builtin-face) :height 1.3))
   "Face for the heading prefix ( > ).")
 
 (defface elxiki-heading-name-face
-  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.2))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
   "Face for the heading prefix ( > ) names.")
 
 ;;; Keyword Regexs
