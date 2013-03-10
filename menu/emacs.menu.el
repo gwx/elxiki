@@ -1,7 +1,10 @@
-(defmenu _init "
+(defmenu _init 
+  (format "
 + version/
+& %s
 @ emacs wiki/
-")
+"
+user-emacs-directory))
 
 (defmenu version
   (with-temp-buffer
