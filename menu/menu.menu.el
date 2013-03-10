@@ -19,7 +19,7 @@
   @ theme
   |   You may also want to take a look at the documentation
   |   for defmenu:
-  !| (describe-function 'defmenu)
+  !! (describe-function 'defmenu)
   > Here are all the defined menus:
   @ all/
 + Using Menus
