@@ -98,7 +98,7 @@
   "Regular expression for the elxiki point face.")
 
 (defvar elxiki-output-regex
-  (rx line-start (* blank) (group "| ") (group (* nonl)))
+  (rx line-start (* blank) (group "|" (? " ")) (group (* nonl)))
   "Regular expression for elxiki output.")
 
 (defvar elxiki-shell-regex

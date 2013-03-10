@@ -70,4 +70,4 @@ Stuff To Add
 * Work on windows, etc.
 * Grep menus after opening.
 * Comment prefixes.
-* Prefix args for `elxiki-command'.
+* Fix folding when you hit the end of the buffer.

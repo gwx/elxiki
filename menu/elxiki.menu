@@ -8,38 +8,41 @@
   | Elxiki organizes things by line. Each line is split up
   | into a 'prefix' and 'name'. Different prefixes do 
   | different things when acted upon:
-  | 
+  |
   | > is a Heading
   > Like This
-  | 
+  |
   | | is arbitrary text
   | As you've been seeing.
-  | 
+  |
   | + and - are opened and closed folders.
   + Open Me
     | And close me again.
-  | 
+  |
   | @ Opens a menu by name
   @ menu/
-  | 
+  |
   | ! runs elisp code.
   ! load-path
-  | 
+  |
   | !! runs elisp code, but doesn't print the output.
   !! (describe-function 'elxiki-mode)
-  | 
+  |
   | $ Runs a shell command.
   $ ls -la /
-  | 
+  |
   | % Runs a shell command asynchronously.
   % top
-  | 
+  |
   | * Finds a file.
   * /home
 + Directories:
   | You can also open directories. Elxiki sees anything 
-  | starting with /, ~, or . as a directory. Lines under
-  | a directory are run from that directory:
+  | starting with /, ~, or . as a directory. Use <C-return>
+  | to open up a directory, and C-u <C-return> to open a
+  | directory with its hidden files:
+  + /
+  | Lines under a directory are run from that directory:
   + /home/
     ! default-directory
     $ pwd
