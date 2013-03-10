@@ -131,10 +131,10 @@ Strips out spaces."
   "Return the file backing MENU."
   (nth 2 menu))
 
-(defun elxiki-menu/fold-if-not-directory ()
+(defun elxiki-menu/fold-if-closed-prefix ()
   (let ((context (elxiki-context-from-ancestry
-                             (elxiki-line-get-ancestry))))
-    (unless (eq 'directory (elxiki-context-get-type context))
+                  (elxiki-line-get-ancestry))))
+    (when (string-equal "+ " (elxiki-context-get-prefix context))
       (elxiki-line-fold))))
 
 (defun elxiki-menu/prepare (result)
@@ -145,10 +145,10 @@ This involves aligning it and folding all children."
       (with-temp-buffer
         (insert result)
         (elxiki/normalize-buffer-indentation)
-        (elxiki-menu/fold-if-not-directory)
         (goto-char (point-min))
-        (while (elxiki-line-goto-first-sibling)
-          (elxiki-menu/fold-if-not-directory))
+        (elxiki-menu/fold-if-closed-prefix)
+        (while (elxiki-line-goto-next)
+          (elxiki-menu/fold-if-closed-prefix))
         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun elxiki-menu-act (context)

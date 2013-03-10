@@ -5,7 +5,7 @@
 | following:
 |
 + Introduction:
-  + Kinds of lines:
+  - Kinds of lines:
     | Elxiki organizes things by line. Each line is split up
     | into a 'prefix' and 'name'. Different prefixes do 
     | different things when acted upon:
@@ -44,7 +44,7 @@
     | directory with its hidden files:
     + /
     | Lines under a directory are run from that directory:
-    + /home/
+    - /home/
       ! default-directory
       $ pwd
     | And of course, they work with tramp:

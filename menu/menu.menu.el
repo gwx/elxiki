@@ -9,6 +9,9 @@
   | To define a menu, type the name of one and then call `elxiki-menu-edit',
   | bound to C-c [ by default. This will find the default file for that menu.
   |
+  | In menus, lines starting with + are always folded when the menu
+  | is opened. Lines starting with - are unfolded.
+  |
   | There are two ways to define a menu:
   | - In a .menu file, which is just text representing the menu.
   |   The elxiki menu is one of these:
