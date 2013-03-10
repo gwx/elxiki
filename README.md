@@ -35,7 +35,7 @@ Just require elxiki:
     (require 'elxiki)
 
 To get started, open up a buffer (*scratch* works fine), run 
-`M-x elxiki-mode', goto a new line, type `elxiki/`, and hit
+`M-x elxiki-mode`, goto a new line, type `elxiki/`, and hit
 `C-<return>`.
 
 Usage
