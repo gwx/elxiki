@@ -35,7 +35,8 @@
     | % Runs a shell command asynchronously.
     % top
     |
-    | & Finds a file.
+    | & Finds a file. C-u to open in another window, 
+    | C-u C-u to open in another frame.
     & /home
   + Directories:
     | You can also open directories. Elxiki sees anything 

@@ -174,8 +174,28 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (name (elxiki-context-get-name context)))
     (find-file (expand-file-name name))))
 
+(defun elxiki-command/find-file-other-window (context)
+  "Finds the file for the elxiki line."
+  (let ((default-directory (elxiki-context-get-directory context))
+        (name (elxiki-context-get-name context)))
+    (find-file-other-window (expand-file-name name))))
+
+(defun elxiki-command/find-file-other-frame (context)
+  "Finds the file for the elxiki line."
+  (let ((default-directory (elxiki-context-get-directory context))
+        (name (elxiki-context-get-name context)))
+    (find-file-other-frame (expand-file-name name))))
+
 (elxiki-command-register 'elxiki-command/find-file
                          'elxiki-command-find-p)
+
+(elxiki-command-register 'elxiki-command/find-file-other-window
+                         'elxiki-command-find-p
+                         1)
+
+(elxiki-command-register 'elxiki-command/find-file-other-frame
+                         'elxiki-command-find-p
+                         2)
 
 (defun elxiki-command-emacs-lisp-p (context)
   "If CONTEXT indicates an emacs lisp command that can be unfolded."
