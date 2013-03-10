@@ -89,6 +89,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 (defun elxiki-command-directory-unfold-p (context)
   "If CONTEXT a directory that can be unfolded."
   (and (not (elxiki-line-find-first-child))
+       (member (elxiki-context-get-prefix context) '("+ " "- " nil))
        (eq 'directory (elxiki-context-get-type context))))
 
 (defun elxiki-command/unfold-directory (context)
