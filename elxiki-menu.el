@@ -188,12 +188,19 @@ This involves aligning it and folding all children."
         (elxiki-menu-dispose menu)))))
 
 (defun elxiki-menu-edit ()
-  "Edit the menu at point."
+  "Edit the menu at point.
+If the menu is a builtin menu, copy it to your personal directory
+before editing."
   (interactive)
   (let* ((context (elxiki-context-from-ancestry (elxiki-line-get-ancestry)))
          (menu (elxiki-menu-load context 'force)))
     (unwind-protect
-        (find-file (elxiki-menu-get-file menu))
+        (let ((file (elxiki-menu-get-file menu)))
+          (if (string-equal elxiki-menu-directory (file-name-directory file))
+              (find-file file)
+            (find-file (concat elxiki-menu-directory
+                               (file-name-nondirectory file)))
+            (insert-file-contents file)))
       (elxiki-menu-dispose menu))))
 
 ;; (defun elxiki-menu-save ()
