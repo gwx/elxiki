@@ -86,6 +86,8 @@ There are also several special menu names:
   value will override that of _init. Use this if you want to
   define a simple menu command. For instance, see the 'zone'
   menu.
+* _undefined is called whenever a menu item you don't have
+  defined is opened.
 
 The menu body is passed the following arguments:
 * prefix :: The prefix for the line being called.
@@ -127,26 +129,26 @@ Strips out spaces."
   "Return the file backing MENU."
   (nth 2 menu))
 
+(defun elxiki-menu/fold-if-not-directory ()
+  (let ((context (elxiki-context-from-ancestry
+                             (elxiki-line-get-ancestry))))
+    (unless (eq 'directory (elxiki-context-get-type context))
+      (elxiki-line-fold))))
+
 (defun elxiki-menu/prepare (string)
   "Prepare a section of text for insertion.
 This involves aligning it and folding all children."
   (when string
-    (let ((try-fold 
-           (lambda ()
-             (let ((context (elxiki-context-from-ancestry
-                             (elxiki-line-get-ancestry))))
-               (unless (eq 'directory (elxiki-context-get-type context))
-                 (elxiki-line-fold)))))
-          pos)
+    (let (pos)
       (with-temp-buffer
         (mapc (lambda (string) (insert string "\n"))
               (elxiki/normalize-indentation
                (split-string string "\n")))
-        (funcall try-fold)
+        (elxiki-menu/fold-if-not-directory)
         (goto-char (point-min))
         (while (setq pos (elxiki-line-find-first-sibling))
           (goto-char pos)
-          (funcall try-fold))
+          (elxiki-menu/fold-if-not-directory))
         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun elxiki-menu-act (context)
@@ -168,6 +170,9 @@ This involves aligning it and folding all children."
                       (buffer-substring-no-properties (point-min) (point-max))))))
            ;; There is a function defined for this action, so do it.
            (item-function
+            (setq result (apply item-function context)))
+           ;; There is an _undefined action, so do that instead.
+           ((setq item-function (elxiki-menu-get-action menu "_undefined"))
             (setq result (apply item-function context)))
            ;; No function, so just read from buffer.
            ('else

@@ -12,7 +12,11 @@
   | 
   | There are two ways to define a menu:
   | - In a .menu file, which is just text representing the menu.
+  |   The elxiki menu is one of these:
+  @ elxiki
   | - In a .menu.el file, which lets the menu run emacs lisp code.
+  |   The theme menu is a good example:
+  @ theme
   > Here are all the defined menus:
   @ all/
 + Using Menus
