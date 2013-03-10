@@ -162,8 +162,7 @@ sibling does not exist, or POS is not at an elxiki line."
 (defun elxiki-line-find-append (&optional pos)
   "Return the position where a sibling would be appended to at POS.
 If POS is not specified, defaults to point.  Returns nil if the
-POS is not at an elxiki line or the target point is past the end
-of the buffer."
+POS is not at an elxiki line."
   (save-excursion
     (when pos (goto-char pos))
     (forward-line 0)
@@ -172,7 +171,8 @@ of the buffer."
       (while (and (elxiki/forward-line)
                   (or (elxiki/line-blank)
                       (>= (current-indentation) indent))))
-      (forward-line 0)
+      (unless (elxiki/forward-line)
+        (end-of-line))
       (when (not (= start (point)))
         (point)))))
 
@@ -190,8 +190,7 @@ matched. Return the line's position."
     (save-excursion
       (when pos (goto-char pos))
       (let ((indent (current-indentation)))
-        (unless (elxiki-line-goto-append)
-          (goto-char (point-max)))
+        (elxiki-line-goto-append)
         (insert "\n")
         (forward-line -1)
         (indent-line-to indent)
@@ -307,8 +306,7 @@ are no children, or POS is not at an elxiki line."
     (forward-line 0)
     (when (elxiki-line-goto-first-child)
       (let ((start (point)))
-        (unless (elxiki-line-goto-append)
-          (goto-char (point-max)))
+        (elxiki-line-goto-append)
         (list start (point))))))
 
 (defun elxiki-line-find-self (&optional pos)
@@ -321,8 +319,7 @@ is not a valid elxiki line."
       (forward-line 0)
       (let ((start point))
         (or (elxiki-line-goto-first-sibling)
-            (elxiki-line-goto-append)
-            (goto-char (point-max)))
+            (elxiki-line-goto-append))
         (list start (point))))))
 
 (defun elxiki-line-add-children (children &optional prefix-function pos)
