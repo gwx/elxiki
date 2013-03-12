@@ -56,7 +56,8 @@ empty menu if it does not exist."
        ((string-equal "el" (file-name-extension menu-file))
         (let (*elxiki-menu-functions* text-fun)
           (load menu-file t t)
-          (setq text-fun (cdr (assoc '_init *elxiki-menu-functions*)))
+          (setq text-fun (cdr (assoc (rx "_init" string-end)
+                                     *elxiki-menu-functions*)))
           (when text-fun
             (with-current-buffer buffer
               (insert (apply text-fun context))))
