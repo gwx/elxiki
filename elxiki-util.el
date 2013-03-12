@@ -2,6 +2,10 @@
 
 (require 'pprint)
 
+(defmacro elxiki-get-point (&rest forms)
+  "Evaluate FORMS, return (point), and then reset point."
+  `(save-excursion ,@forms (point)))
+
 (defun elxiki-wrap-text (string &optional width)
   "Wraps STRING around target WIDTH."
   (let ((string (pprint-to-string string width)))
