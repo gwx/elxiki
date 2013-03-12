@@ -6,6 +6,7 @@
 (require 'elxiki-line)
 (require 'elxiki-context)
 (require 'elxiki-menu)
+(require 'elxiki-filter)
 
 ;;; Code:
 (defvar elxiki-commands (cons nil nil)
@@ -105,7 +106,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
                     ('else
                      (concat "& " line)))))))
     (elxiki-line-add-children (directory-files default-directory) 
-                              line-prepare)))
+                              line-prepare)
+    (elxiki-filter)))
 
 (defun elxiki-command/unfold-directory-unhidden (context)
   "Adds the directory's files (ignoring hidden) as children lines."
@@ -122,7 +124,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
                     ('else
                      (concat "& " line)))))))
     (elxiki-line-add-children (directory-files default-directory nil regex)
-                              line-prepare)))
+                              line-prepare)
+    (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/unfold-directory-unhidden
                          'elxiki-command-directory-unfold-p)
@@ -143,7 +146,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (name (elxiki-context-get-name context))
         (line-prepare (lambda (line) (concat "| " line))))
     (elxiki-line-add-children (shell-command-to-string name) line-prepare)
-    (message "Ran: %s" name)))
+    (message "Ran: %s" name)
+    (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/unfold-shell
                          'elxiki-command-shell-unfold-p)
@@ -207,7 +211,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (name (elxiki-context-get-name context))
         (line-prepare (lambda (line) (concat "| " line))))
     (elxiki-line-add-children (pprint-to-string (eval (read name))) 
-                              line-prepare)))
+                              line-prepare)
+    (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/unfold-emacs-lisp
                          'elxiki-command-emacs-lisp-p)
@@ -243,7 +248,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
       (if (elxiki-context-menu-root-p context)
           (elxiki-line-set-prefix "@ ")
         (elxiki-line-set-prefix "+ ")))
-    (elxiki-line-add-children (elxiki-menu-act context))))
+    (elxiki-line-add-children (elxiki-menu-act context))
+    (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/menu-act
                          'elxiki-command-menu-act-p)

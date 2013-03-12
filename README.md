@@ -68,5 +68,4 @@ Stuff To Add
 
 * Saving menus.
 * Work on windows, etc.
-* Grep menus after opening.
 * Comment prefixes.

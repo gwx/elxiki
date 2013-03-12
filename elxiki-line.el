@@ -111,6 +111,26 @@ elxiki lines will interrupt this."
         nil
       (point))))
 
+(defun elxiki-line-goto-current ()
+  "Goto the elxiki line before or at point if it exists.
+Returns point if the line is found and nil if it is not. Non
+elxiki lines will interrupt this."
+  (let ((posn (point)))
+    (while (and (elxiki/line-blank)
+                (= 0 (forward-line -1))))
+    (forward-line 0)
+    (when (elxiki-line-get)
+      (point))))
+
+(defun elxiki-line-goto-name ()
+  "Goto the name portion of the current elxiki item."
+  (elxiki-line-goto-current)
+  (let ((line (elxiki-line-get)))
+    (when line
+      (forward-to-indentation 0)
+      (forward-char (length (car line)))
+      (point))))
+
 (defun elxiki-line-find-first-child (&optional pos)
   "Return the position of the first child of elxiki line at POS.
 If POS is not specified, defaults to point.  Returns nil if the
@@ -375,6 +395,72 @@ POS defaults to point."
                   (setq pos (elxiki-line-find-parent)))
         (goto-char pos))
       ancestry)))
+
+(defun elxiki-line-match-siblings (predicate)
+  "Return a list of offsets for siblings which match PREDICATE.
+PREDICATE is a function of no arguments which is run when point
+is at the start of the sibling."
+  (save-excursion
+    (forward-line 0)
+    (let ((matches (when (funcall predicate) (list 0)))
+          (offset 0))
+      (while (elxiki-line-goto-first-sibling)
+        (setq offset (1+ offset))
+        (when (funcall predicate)
+          (setq matches (cons offset matches))))
+      (nreverse matches))))
+
+(defun elxiki-line-delete-siblings ()
+  "Delete self and all siblings after."
+  (save-excursion
+    (let ((start (point)))
+      (when (elxiki-line-goto-append)
+        (delete-region start (point))))))
+
+(defun elxiki-line-delete-branch ()
+  "Deletes the elxiki line and children at point."
+  (save-excursion
+    (forward-line 0)
+    (let ((start (point)))
+      (when (or (elxiki-line-goto-first-sibling)
+                (elxiki-line-goto-append))
+        (delete-region start (point))))))
+
+(defun elxiki-line-filter-siblings (predicate &optional restrict-none)
+  "Remove all siblings who do not satisfy PREDICATE.
+PREDICATE is run when point is at the start of the sibling. if
+RESTRICT-NONE is non-nil, then do not filter if it would result
+in no siblings left."
+  (save-excursion
+    (elxiki-line-goto-current)
+    (let ((matches (elxiki-line-match-siblings predicate))
+          (indent (current-indentation))
+          (offset 0))
+      (cond
+       (matches
+        (while matches
+          (while (< offset (car matches))
+            (elxiki-line-delete-branch)
+            (setq offset (1+ offset)))
+          (setq offset (1+ offset))
+          (if (elxiki-line-goto-first-sibling)
+              (setq matches (cdr matches))
+            (setq matches nil)
+            (elxiki-line-goto-append)))
+        (when (and (elxiki-line-goto-current)
+                   (>= (current-indentation) indent))
+          (elxiki-line-delete-siblings)))
+       ((not restrict-none)
+        (elxiki-line-delete-siblings))))))
+
+(defun elxiki-line-filter-children (predicate &optional restrict-none)
+  "Remove all children who do not satisfy PREDICATE.
+PREDICATE is run when point is at the start of the child. if
+RESTRICT-NONE is non-nil, then do not filter if it would result
+in no siblings left."
+  (save-excursion
+    (when (elxiki-line-goto-first-child)
+      (elxiki-line-filter-siblings predicate restrict-none))))
 
 (provide 'elxiki-line)
 ;;; elxiki-line.el ends here
