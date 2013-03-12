@@ -20,25 +20,44 @@ point is on a given line.")
       (elxiki-line-goto-name)
       (looking-at *elxiki-filter-regexp*))))
 
+(defvar elxiki-filter-inhibit nil
+  "When non-nil, ignore calls to `elxiki-filter'.")
+
 (defvar elxiki-filter-map (make-keymap)
   "Keymap while elxiki is filtering results.")
 
 (defvar elxiki-filter-input nil
   "Current input to the `elxiki-filter-function'.")
 
-(defun elxiki-filter ()
-  "Start filtering the elxiki children at point."
-  (interactive)
-  (setq elxiki-filter-input "")
-  (when overriding-local-map
-    (error "Something is already using `overriding-local-map'."))
-  (setq overriding-local-map elxiki-filter-map))
+(defvar elxiki-filter-cursor-type 'hollow
+  "Cursor type to change cursor to while filtering results.
+If nil, do not change cursor.")
+
+(defvar elxiki-filter-cursor-previous nil
+  "Holds the previous cursor type.")
+
+(define-minor-mode elxiki-filter
+  "Currently filtering elxiki results.
+See `elxiki-filter-map'."
+  :keymap 'elxiki-filter-map
+  (if elxiki-filter
+      (if (and (not elxiki-filter-inhibit)
+               (elxiki-line-goto-first-child))
+          (progn
+            (setq elxiki-filter-input "")
+            (when elxiki-filter-cursor-type
+              (setq elxiki-filter-cursor-previous cursor-type)
+              (setq cursor-type elxiki-filter-cursor-type)))
+        (elxiki-filter -1))
+    (message "elxiki: Stopped Filtering.")
+    (when elxiki-filter-cursor-type
+      (setq cursor-type elxiki-filter-cursor-previous)
+      (setq elxiki-filter-cursor-previous nil))))
 
 (defun elxiki-filter-stop ()
   "Stop filtering elxiki results."
   (interactive)
-  (message "Stopped filtering.")
-  (setq overriding-local-map nil))
+  (elxiki-filter -1))
 
 (defun elxiki-filter-insert ()
   "Inserts the key pressed into the filter list."
@@ -47,15 +66,42 @@ point is on a given line.")
     (setq elxiki-filter-input
           (concat elxiki-filter-input
                   (substring keys (- (length keys) 1))))
-    (elxiki-line-filter-children
+    (elxiki-line-filter-siblings
      (funcall elxiki-filter-function elxiki-filter-input)
      t)))
+
+(defun elxiki-filter-replace-parent ()
+  "Make the entry replace the parent and then act on it."
+  (interactive)
+  (when (elxiki-line-find-parent)
+    (elxiki-line-replace-parent)
+    (elxiki-filter -1)
+    (elxiki-command)))
+
+(defun elxiki-filter-hide-siblings ()
+  "Make the line at point hide siblings and then act on it."
+  (interactive)
+  (elxiki-line-delete-siblings)
+  (elxiki-filter -1)
+  (elxiki-command))
+
+(defun elxiki-filter-stop-command ()
+  "Stop filtering, then do the command."
+  (interactive)
+  (elxiki-filter -1)
+  (elxiki-command))
 
 (define-key elxiki-filter-map [t] 'elxiki-filter-stop)
 (substitute-key-definition 'self-insert-command 'elxiki-filter-insert
                            elxiki-filter-map global-map)
 (define-key elxiki-filter-map (kbd "C-g") 'elxiki-filter-stop)
-(define-key elxiki-filter-map (kbd "RET") 'elxiki-filter-stop)
+(define-key elxiki-filter-map (kbd "C-h") nil)
+(define-key elxiki-filter-map (kbd "<return>") 'elxiki-filter-stop)
+(define-key elxiki-filter-map (kbd "C-<return>") 'elxiki-filter-stop-command)
+(define-key elxiki-filter-map (kbd "M-<return>") 'elxiki-filter-stop-command)
+(define-key elxiki-filter-map (kbd "<tab>") 'elxiki-filter-hide-siblings)
+(define-key elxiki-filter-map (kbd "C-/") 'elxiki-filter-replace-parent)
+(define-key elxiki-filter-map (kbd "M-/") 'elxiki-filter-replace-parent)
 
 (provide 'elxiki-filter)
 
