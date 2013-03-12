@@ -20,7 +20,7 @@ point is on a given line.")
       (elxiki-line-goto-name)
       (looking-at *elxiki-filter-regexp*))))
 
-(defvar elxiki-filter-inhibit nil
+(defvar elxiki-filter-inhibit t
   "When non-nil, ignore calls to `elxiki-filter'.")
 
 (defvar elxiki-filter-map (make-keymap)
@@ -83,20 +83,14 @@ See `elxiki-filter-map'."
   (elxiki-filter -1)
   (elxiki-command))
 
-(defun elxiki-filter-stop-command ()
-  "Stop filtering, then do the command."
-  (interactive)
-  (elxiki-filter -1)
-  (elxiki-command))
-
 (define-key elxiki-filter-map [t] 'elxiki-filter-stop)
 (substitute-key-definition 'self-insert-command 'elxiki-filter-insert
                            elxiki-filter-map global-map)
 (define-key elxiki-filter-map (kbd "C-g") 'elxiki-filter-stop)
 (define-key elxiki-filter-map (kbd "C-h") nil)
 (define-key elxiki-filter-map (kbd "<return>") 'elxiki-filter-stop)
-(define-key elxiki-filter-map (kbd "C-<return>") 'elxiki-filter-stop-command)
-(define-key elxiki-filter-map (kbd "M-<return>") 'elxiki-filter-stop-command)
+(define-key elxiki-filter-map (kbd "C-<return>") 'elxiki-command)
+(define-key elxiki-filter-map (kbd "M-<return>") 'elxiki-command-switch-filter)
 (define-key elxiki-filter-map (kbd "<tab>") 'elxiki-filter-hide-siblings)
 (define-key elxiki-filter-map (kbd "C-/") 'elxiki-filter-replace-parent)
 (define-key elxiki-filter-map (kbd "M-/") 'elxiki-filter-replace-parent)

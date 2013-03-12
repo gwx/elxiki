@@ -1,8 +1,10 @@
 (defmenu _init 
   (format "
+> Filtering is: %s
++ turn filtering %s
 | Immediately after doing `elxiki-command', you may filter
 | results by typing. Try it on the list of keys below:
-+ Keys
++ Filtering Keys
   | Stop filtering results: C-g, <return>
   | Perform another action: C-<return>
   | Perform action and hide siblings: <tab>
@@ -11,11 +13,9 @@
   | While filtering, your cursor will change to a box.
   | You can change this with the variable:
   ! elxiki-filter-cursor-type
-+ Disable Filtering
-  | You can disable filtering if you dislike it. Just
-  | set `elxiki-filter-inhibit' to non-nil.
-  > Filtering is: %s
-  + turn filtering %s
+| By default, M-<return> is bound to 
+| `elxiki-command-switch-filter', which is like 
+| `elxiki-command' but it negates the filter value.
 "
           (if elxiki-filter-inhibit "Off" "On")
           (if elxiki-filter-inhibit "on" "off")))

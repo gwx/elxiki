@@ -1,13 +1,13 @@
 > Welcome to Elxiki!
 | This is an imitation of http://xiki.org, written in pure
-| emacs lisp. Use `elxiki-command' (C-<return> <return>) to do 
+| emacs lisp. Use `elxiki-command' (C-<return>) to do
 | a context-aware action at point. Try it on the + line
 | following:
 |
-+ Introduction:
+- Introduction:
   - Kinds of lines:
     | Elxiki organizes things by line. Each line is split up
-    | into a 'prefix' and 'name'. Different prefixes do 
+    | into a 'prefix' and 'name'. Different prefixes do
     | different things when acted upon:
     |
     | > is a Heading
@@ -18,7 +18,6 @@
     |
     | + and - are opened and closed folders.
     + Open Me
-      | And close me again.
     |
     | @ Opens a menu by name
     @ menu/
@@ -35,24 +34,11 @@
     | % Runs a shell command asynchronously.
     % top
     |
-    | & Finds a file. C-u to open in another window, 
+    | & Finds a file. C-u to open in another window,
     | C-u C-u to open in another frame.
     & /home
   @ filtering
   + Directories:
-    | You can also open directories. Elxiki sees anything 
-    | starting with /, ~, or . as a directory. Use <C-return>
-    | to open up a directory, and C-u <C-return> to open a
-    | directory with its hidden files:
-    + /
-    | Lines under a directory are run from that directory:
-    - /home/
-      ! default-directory
-      $ pwd
-    | And of course, they work with tramp:
-    | + /ssh:user@remote:~/
   | That's all for now!
-  | Woosh:
-  @ zone
-+ Info
-  ! elxiki-directory
+| Woosh:
+@ zone

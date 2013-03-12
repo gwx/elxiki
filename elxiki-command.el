@@ -58,6 +58,7 @@ precedence than other commands."
 (defun elxiki-command (&optional arg)
   "Perform the proper elxiki command at point."
   (interactive "P")
+  (elxiki-filter -1)
   (when (elxiki-line-get)
     (let ((commands elxiki-commands)
           (context (elxiki-context-from-ancestry (elxiki-line-get-ancestry))))
@@ -72,6 +73,12 @@ precedence than other commands."
             (progn (funcall (cdar commands) context)
                    (setq commands nil))
           (setq commands (cdr commands)))))))
+
+(defun elxiki-command-switch-filter (&optional arg)
+  "Perform `elxiki-command' at point, flipping the norma value for `elxiki-filter-inhibit'."
+  (interactive "P")
+  (let ((elxiki-filter-inhibit (not elxiki-filter-inhibit)))
+    (elxiki-command arg)))
 
 ;;; Builtin Commands:
 
