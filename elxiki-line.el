@@ -99,26 +99,17 @@ parent does not exist, or POS is not at an exiki line."
     (when n
       (goto-char n))))
 
-(defun elxiki-line-next (&optional pos)
-  "Return the position of the elxiki line following POS.
-If POS is not specified, it defaults to point. Return nil if it
-comes across any non elxiki line except for a blank one, or we
-reach the end of the buffer."
-  (save-excursion
-    (if pos (goto-char pos)
-      (setq pos (point)))
+(defun elxiki-line-goto-next ()
+  "Goto the elxiki line following point if it exists.
+Returns point if the line is found and nil if it is not. Non
+elxiki lines will interrupt this."
+  (let ((posn (point)))
     (while (and (elxiki/forward-line)
                 (elxiki/line-blank)))
     (forward-line 0)
-    (if (= (point) pos)
+    (if (= (point) posn)
         nil
       (point))))
-
-(defun elxiki-line-goto-next (&optional pos)
-  "Goto the result of `elxiki-line-next'."
-  (let ((n (elxiki-line-next pos)))
-    (when n
-      (goto-char n))))
 
 (defun elxiki-line-find-first-child (&optional pos)
   "Return the position of the first child of elxiki line at POS.
