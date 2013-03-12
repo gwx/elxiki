@@ -1,4 +1,4 @@
-(defmenu _init 
+(defmenu _root
   (format "
 + version/
 & %s

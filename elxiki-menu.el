@@ -16,7 +16,7 @@ Must end in a /.")
   (list elxiki-menu-directory elxiki-menu-install-directory)
   "Path of directories to check for menu files.")
 
-(defvar elxiki-menu-buffer-name-prefix " elxiki-menu"
+(defvar elxiki-menu-buffer-name-prefix " elxiki-menu-"
   "Prefix to name buffers holding elxiki menus with.")
 
 (defun elxiki-menu-find (menu)
@@ -43,7 +43,9 @@ empty menu if it does not exist."
          buffer)
     (cond
      (menu-file
-      (setq buffer (generate-new-buffer elxiki-menu-buffer-name-prefix))
+      (setq buffer (generate-new-buffer 
+                    (concat elxiki-menu-buffer-name-prefix
+                            root-menu-name)))
       (cond
        ;; .menu file (text only)
        ((string-equal "menu" (file-name-extension menu-file))
@@ -65,6 +67,25 @@ empty menu if it does not exist."
             (concat (file-name-as-directory elxiki-menu-directory)
                     (concat root-menu-name ".menu")))))))
 
+(defun elxiki-menu--reduce-item-name (menu-item)
+  "Convert MENU-ITEM to the canonical function name.
+Strips out spaces."
+  (setq menu-item (elxiki/strip-slash menu-item))
+  (replace-regexp-in-string " " "" menu-item))
+
+(defun elxiki-menu--item-to-regexp (item)
+  "Convert ITEM name to a regexp matching that item."
+  (let ((result item))
+    (setq result (concat (regexp-quote (elxiki-menu--reduce-item-name result))
+                         (rx string-end)))
+    (setq result
+          (replace-regexp-in-string (rx (? "/") (group "_any") (? "/"))
+                                    (rx (* (not (any "/"))))
+                                    result nil nil 1))
+    (replace-regexp-in-string (rx (? "/") (group "_many") (? "/"))
+                              (rx (* nonl))
+                              result nil nil 1)))
+
 (defmacro defmenu (name &rest body)
   "Define a menu item. For use in .menu.el files.
 
@@ -73,21 +94,30 @@ name, then that method is called, and the resulting string is
 what is attached under the item being opened. Menus are named
 according to their full path, with spaces stripped. For example:
 
-+ Start/
-  + Item A/
-  + Item B/
+@ Menu/
+  + Start/
+    + Item A/
+    + Item B/
 
 'Item A' can be defined with (defmenu Start/ItemA ...).
 
-There are also several special menu names:
-* _init is called every time any item in the hierarchy is
-  opened. Its return value is used as the text for the menu.
-* _root is called when the top level item is opened. Its return
-  value will override that of _init. Use this if you want to
-  define a simple menu command. For instance, see the 'zone'
-  menu.
-* _undefined is called whenever a menu item you don't have
-  defined is opened.
+There are several special names you can use in the path:
+
+* _root is the root of the menu. (defmenu A ...) will match
+  /Menu/B/A as well as /Menu/A, but (defmenu _root/A ...) will
+  only match the latter.
+* _any stands for any 1 menu item. For instance, 
+  (defmenu A/_any/A ...) will match /A/B/A but not /A/B/B/A.
+* _many stands for 1 or more menu items. For instance,
+  (defmenu A/_many ...) will match /A/B and /A/B/C, but not
+  /A by itself.
+
+Later defmenu calls in a file take precedence.
+
+There is also the special menu _init, which is called every time
+any item in the hierarchy is opened. Its return value is used as
+the text for the menu. The only time you may skip defining this
+is when every single item in the menu has an associated action.
 
 The menu body is passed the following arguments:
 * prefix :: The prefix for the line being called.
@@ -97,7 +127,7 @@ The menu body is passed the following arguments:
 * type :: Should always be 'menu."
   (declare (indent defun))
   `(setq *elxiki-menu-functions*
-         (cons (cons ',(intern (elxiki/strip-slash (symbol-name name)))
+         (cons (cons (elxiki-menu--item-to-regexp (symbol-name ',name))
                      (lambda ,elxiki-context-format ,@body))
                *elxiki-menu-functions*)))
 
@@ -115,17 +145,26 @@ The menu body is passed the following arguments:
   "Kills the buffer associated with MENU."
   (kill-buffer (elxiki-menu-get-buffer menu)))
 
-(defun elxiki-menu/to-function-name (menu-item)
-  "Convert MENU-ITEM to the corresponding function name.
-Strips out spaces."
-  (setq menu-item (elxiki/strip-slash menu-item))
-  (intern
-   (replace-regexp-in-string " " "" menu-item)))
-
-(defun elxiki-menu-get-action (menu action)
-  "Return from MENU the action with name ACTION."
-  (cdr (assoc (elxiki-menu/to-function-name action)
-              (cadr menu))))
+(defun elxiki-menu-get-action (menu context)
+  "Return from MENU the function CONTEXT calls for.
+See `defmenu' documentation for how actions are specified."
+  (save-match-data
+    (let ((path (elxiki/strip-slash (elxiki-context-get-menu context)))
+          (actions (nth 1 menu))
+          action)
+      ;; Prepare path
+      (setq path
+            (replace-regexp-in-string (rx string-start (group (*? any)) 
+                                          (or "/" string-end))
+                                      "_root" path nil nil 1))
+      (setq path (elxiki-menu--reduce-item-name path))
+      ;; Find the first matching action.
+      (while actions
+        (if (string-match (caar actions) path)
+            (progn (setq action (cdar actions))
+                   (setq actions nil))
+          (setq actions (cdr actions))))
+      action)))
 
 (defun elxiki-menu-get-file (menu)
   "Return the file backing MENU."
@@ -153,26 +192,21 @@ This involves aligning it and folding all children."
 
 (defun elxiki-menu-act (context)
   "Do the menu action described by CONTEXT and return the resulting text."
-  (let ((menu (elxiki-menu-load context))
-        (inner-path (elxiki-drop-root (elxiki-context-get-menu context)))
-        item-function result)
+  (let* ((menu (elxiki-menu-load context))
+         (inner-path (elxiki-drop-root (elxiki-context-get-menu context)))
+         (action (elxiki-menu-get-action menu context))
+         result)
     (unwind-protect
         (when menu
           (cond
+           ;; If there is a matching action, do it.
+           (action
+            (setq result (apply action context)))
            ;; Treat the root menu specially.
            ((string-equal "" inner-path)
-            (setq item-function (elxiki-menu-get-action menu "_root"))
-            (if item-function
-                (setq result (apply item-function context))
-              (setq result
-                    (with-current-buffer (elxiki-menu-get-buffer menu)
-                      (buffer-substring-no-properties (point-min) (point-max))))))
-           ;; There is a function defined for this action, so do it.
-           ((setq item-function (elxiki-menu-get-action menu inner-path))
-            (setq result (apply item-function context)))
-           ;; There is an _undefined action, so do that instead.
-           ((setq item-function (elxiki-menu-get-action menu "_undefined"))
-            (setq result (apply item-function context)))
+            (setq result
+                  (with-current-buffer (elxiki-menu-get-buffer menu)
+                    (buffer-substring-no-properties (point-min) (point-max)))))
            ;; No function, so just read from buffer.
            ('else
             (with-current-buffer (elxiki-menu-get-buffer menu)

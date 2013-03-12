@@ -31,7 +31,7 @@
   :lighter " ElXiKi"
   :keymap elxiki-mode-map
   (if (and elxiki-mode elxiki-use-font-lock)
-      (font-lock-add-keywords nil elxiki-mode-keywords 'low-precedence)
+      (font-lock-add-keywords nil elxiki-mode-keywords 'append)
     (font-lock-remove-keywords nil elxiki-mode-keywords))
   (font-lock-fontify-buffer))
 

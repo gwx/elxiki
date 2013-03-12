@@ -5,7 +5,7 @@
 @ google image/
 ")
 
-(defmenu _undefined
+(defmenu _root/_many
   (let ((term (elxiki-drop-root menu)))
     (when term
       (browse-url

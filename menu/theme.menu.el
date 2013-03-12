@@ -4,6 +4,6 @@
                      (custom-available-themes)
                      "\n")))
 
-(defmenu _undefined
+(defmenu _root/_many
   (load-theme (intern name))
   "")

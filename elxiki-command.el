@@ -76,8 +76,7 @@ precedence than other commands."
 
 (defun elxiki-command-fold-p (context)
   "Return non-nil if the line at point should fold."
-  (or (string-equal "- " (elxiki-context-get-prefix context))
-      (elxiki-line-find-first-child)))
+  (elxiki-line-find-first-child))
 
 (defun elxiki-command/fold (context)
   "Remove all children from the elxiki line.
@@ -238,15 +237,13 @@ If the prefix is currently \"- \", change it to \"+ \"."
         (prefix (elxiki-context-get-prefix context)))
     (when (string-equal "+ " prefix)
       (elxiki-line-set-prefix "- "))
-    (when (and (or (elxiki-context-menu-root-p context)
-                   (= 0 (length prefix)))
+    (when (and (= 0 (length prefix))
                (elxiki-menu-find (elxiki/path-root 
                                   (elxiki-context-get-menu context))))
-      (elxiki-line-set-prefix "@ "))
-    (elxiki-line-add-children (elxiki-menu-act context))
-    (unless (elxiki-line-find-first-child)
-      (when (string-equal "- " (elxiki-line-get-prefix))
-        (elxiki-line-set-prefix "+ ")))))
+      (if (elxiki-context-menu-root-p context)
+          (elxiki-line-set-prefix "@ ")
+        (elxiki-line-set-prefix "+ ")))
+    (elxiki-line-add-children (elxiki-menu-act context))))
 
 (elxiki-command-register 'elxiki-command/menu-act
                          'elxiki-command-menu-act-p)
