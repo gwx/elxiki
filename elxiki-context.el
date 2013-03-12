@@ -14,16 +14,6 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
       (setq prefix (caar ancestry))
       (setq name (cadar ancestry))
       (cond
-       ;; Has a weird prefix, so don't do anything.
-       ((not (member prefix '("@ " "+ " "- " nil)))
-        (setq last-type 'misc))
-       ;; Is marked a menu.
-       ((string-equal "@ " prefix)
-        (setq menu name)
-        (setq last-type 'menu))
-       ;; Append to menu.
-       ((eq 'menu last-type)
-        (setq menu (concat (file-name-as-directory menu) name)))
        ;; Absolute, so reset directory.
        ((member (string-to-char name) '(?/ ?~))
         (setq directory (expand-file-name name))
@@ -34,14 +24,22 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
              (= ?. (string-to-char name)))
         (setq directory name)
         (setq last-type 'directory))
-       ;; Is the first item and it isn't a directory, so it has to be
-       ;; a menu.
-       ((null last-type)
+       ;; Has a weird prefix, so don't do anything.
+       ((not (member prefix '("@ " "+ " "- " nil)))
+        (setq last-type 'misc))
+       ;; Either this is marked as a menu (@ prefix) or it is the
+       ;; first item and it isn't a directory, so it has to be a
+       ;; menu.
+       ((or (null last-type)
+            (string-equal "@ " prefix))
         (setq menu name)
         (setq last-type 'menu))
        ;; Append to directory.
        ((eq 'directory last-type)
-        (setq directory (concat (file-name-as-directory directory) name))))
+        (setq directory (concat (file-name-as-directory directory) name)))
+       ;; Append to menu.
+       ((eq 'menu last-type)
+        (setq menu (concat (file-name-as-directory menu) name))))
       (setq ancestry (cdr ancestry)))
     (when directory
       (setq directory (file-name-as-directory directory)))
