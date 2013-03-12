@@ -1,6 +1,6 @@
 > Welcome to Elxiki!
 | This is an imitation of http://xiki.org, written in pure
-| emacs lisp. Use `elxiki-command' (C-<return>) to do 
+| emacs lisp. Use `elxiki-command' (C-<return> <return>) to do 
 | a context-aware action at point. Try it on the + line
 | following:
 |
@@ -38,6 +38,7 @@
     | & Finds a file. C-u to open in another window, 
     | C-u C-u to open in another frame.
     & /home
+  @ filtering
   + Directories:
     | You can also open directories. Elxiki sees anything 
     | starting with /, ~, or . as a directory. Use <C-return>

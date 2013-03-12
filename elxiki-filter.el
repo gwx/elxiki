@@ -49,10 +49,8 @@ See `elxiki-filter-map'."
               (setq elxiki-filter-cursor-previous cursor-type)
               (setq cursor-type elxiki-filter-cursor-type)))
         (elxiki-filter -1))
-    (message "elxiki: Stopped Filtering.")
     (when elxiki-filter-cursor-type
-      (setq cursor-type elxiki-filter-cursor-previous)
-      (setq elxiki-filter-cursor-previous nil))))
+      (setq cursor-type elxiki-filter-cursor-previous))))
 
 (defun elxiki-filter-stop ()
   "Stop filtering elxiki results."
