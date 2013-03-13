@@ -10,7 +10,7 @@
 ;;; Code:
 (defvar elxiki-directory (file-name-directory (or (buffer-file-name) load-file-name))
   "The home directory for elxiki.")
-(add-to-list 'load-path elxiki-directory)
+(add-to-list 'load-path (concat elxiki-directory "src/"))
 
 (require 'elxiki-util)
 (require 'elxiki-line)
@@ -35,13 +35,6 @@
       (font-lock-add-keywords nil elxiki-mode-keywords 'append)
     (font-lock-remove-keywords nil elxiki-mode-keywords))
   (font-lock-fontify-buffer))
-
-;; Disables font-lock by default. (I think)
-(define-globalized-minor-mode elxiki-global-mode elxiki-mode
-  (lambda ()
-    (unless elxiki-mode
-      (let ((elxiki-use-font-lock nil))
-        (elxiki-mode 1)))))
 
 (provide 'elxiki)
 ;;; elxiki.el ends here
