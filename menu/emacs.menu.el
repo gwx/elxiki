@@ -1,9 +1,7 @@
 (defmenu _root
-  (format "
-+ version/
+  (format "+ version/
 & %s
-@ emacs wiki/
-"
+@ emacs wiki/"
 user-emacs-directory))
 
 (defmenu version

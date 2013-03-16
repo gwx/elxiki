@@ -1,9 +1,7 @@
 (defmenu _init
-  (concat "
-| Activate a line to set it.
+  (concat "| Activate a line to set it.
 | e.g. @ env/aaa=bbb, or in the list at the end.
-> All Environment Variables:
-"
+> All Environment Variables:"
           (mapconcat (lambda (s) (concat "- " s))
                      process-environment
                      "\n")))

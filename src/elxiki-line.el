@@ -6,501 +6,532 @@
 
 ;;; Code:
 (defvar elxiki-line-prefix-list
-  '("| " "$ " "% " "+ " "- " "& " "! " "> " "@ " "!! " "|")
+  '("| " "|" "$ " "% " "+ " "- " "& " "! " "> " "@ " "!! ")
   "List of prefixes which are used by elxiki.")
 
 (defvar elxiki-line-indent-count 2
   "How many spaces to indent children.")
 
-(defun elxiki/region (start length)
-  "Return the valid region starting from START up to LENGTH long."
-  (list start
-        (min (point-max)
-             (+ length start))))
+(defun elxiki-line-get-indentation ()
+  "Return the amount of indentation of line at point."
+  (current-indentation))
 
-(defun elxiki-line-goto-start ()
-  "Move point to the start of the current elxiki line."
+(defun elxiki-line-indent-to (indent)
+  "Indents the current line to INDENT spaces."
+  (indent-line-to indent))
+
+(defun elxiki-line-goto-beginning ()
+  "Move point to the beginning of the current elxiki line."
   (forward-line 0))
 
-(defun elxiki/match-buffer (string &optional pos)
-  "Match STRING against the characters following POS.
-POS defaults to point."
-  (unless pos (setq pos (point)))
-  (string-equal string
-                (buffer-substring-no-properties
-                 pos
-                 (min (point-max) (+ pos (length string))))))
-
-(defun elxiki/trim (string)
-  "Remove whitespace from edges of STRING."
-  (save-match-data
-    (string-match (rx string-start (* blank)
-                      (group (*? anything))
-                      (* blank) string-end)
-                  string)
-    (match-string 1 string)))
-
-(defun elxiki-line-get-prefix (&optional pos)
-  "Gets the prefix of the elxiki line at POS.
-POS defaults to point.  Returns nil if there is no prefix or valid
-line."
+(defun elxiki-line-blank-p ()
+  "If the line at point is blank."
   (save-excursion
-    (when pos (goto-char pos))
-    (forward-to-indentation 0)
+    (elxiki-line-goto-beginning)
+    (looking-at-p (rx (* blank) line-end))))
+
+(defun elxiki-line-goto-prefix ()
+  "Move point to the prefix of the current elxiki line."
+  (forward-to-indentation 0))
+
+(defun elxiki-line-looking-at-prefix ()
+  "If there is a prefix at point, return it."
     (let ((prefixes elxiki-line-prefix-list))
       (while (and prefixes
-                  (not (elxiki/match-buffer (car prefixes))))
+                  (not (looking-at-p (regexp-quote (car prefixes)))))
         (setq prefixes (cdr prefixes)))
-      (car prefixes))))
+      (car prefixes)))
 
-(defun elxiki-line-get (&optional pos)
-  "Gets the elxiki line at POS, splitting it into (prefix name).
-POS defaults to point.  Returns nil if the line at POS is not a
-valid elxiki line."
+(defun elxiki-line-goto-name ()
+  "Goto the name portion of the elxiki line at point."
+  (elxiki-line-goto-prefix)
+  (let ((prefix (elxiki-line-looking-at-prefix)))
+    (when prefix
+      (forward-char (length prefix)))))
+
+(defun elxiki-line-get-prefix ()
+  "Gets the prefix of the elxiki line at point.
+Returns nil if there is no prefix or valid line."
   (save-excursion
-    (save-match-data
-      (when pos (goto-char pos))
-      (let ((prefix (elxiki-line-get-prefix))
-            name start)
-        ;; Find name
-        (forward-to-indentation 0)
-        (forward-char (length prefix))
-        (setq start (point))
-        (end-of-line)
-        (setq name (elxiki/trim (buffer-substring-no-properties start (point))))
-        ;; Check for eligibility
-        (when (or prefix
-                  (string-match (rx "/" (* blank) string-end) name)
-                  (string-match (rx string-start (not blank)) name)
-                  (string-match (rx string-start (* blank) string-end) name))
-          (list prefix name))))))
+    (elxiki-line-goto-prefix)
+    (elxiki-line-looking-at-prefix)))
 
-(defun elxiki-line-get-name (&optional pos)
-  "Gets the name of the elxiki line at POS.
-POS defaults to point.  Returns nil if there is no valid elxiki
-line."
-  (nth 1 (elxiki-line-get pos)))
-
-(defun elxiki-line-find-parent (&optional pos)
-  "Return the position of the parent of elxiki line at POS.
-If POS is not specified, defaults to point.  Returns nil if
-parent does not exist, or POS is not at an exiki line."
+(defun elxiki-line-get-name ()
+  "Gets the name of the elxiki line at point.
+Returns nil if there is no valid elxiki line."
   (save-excursion
-    (when pos (goto-char pos))
-    (setq pos (point))
-    (let ((indent (current-indentation))
-          (line (line-number-at-pos)))
-      (while (and (elxiki-line-get)
-                  (or (>= (current-indentation) indent)
-                      (elxiki/line-blank))
-                  (= 0 (forward-line -1))))
-      (when (and (elxiki-line-get)
-                 (< (current-indentation) indent)
-                 (not (= (line-number-at-pos) line)))
-        (forward-to-indentation 0)
-        (point)))))
+    (elxiki-line-goto-name)
+    (let ((start (point)))
+      (end-of-line)
+      (buffer-substring start (point)))))
 
-(defun elxiki-line-goto-parent (&optional pos)
-  "Goto the result of `elxiki-line-find-parent'."
-  (let ((n (elxiki-line-find-parent pos)))
-    (when n
-      (goto-char n))))
+(defun elxiki-line-valid-p ()
+  "Return non-nil if there is an elxiki line at point."
+  (or (elxiki-line-get-prefix)
+      (save-excursion (elxiki-line-goto-name)
+        (or (looking-at-p (rx (* nonl) "/" (* blank) line-end))
+            (looking-at-p (rx line-start (* blank) line-end))))))
 
 (defun elxiki-line-goto-current ()
   "Goto the elxiki line before or at point if it exists.
 Returns point if the line is found and nil if it is not. Non
 elxiki lines will interrupt this."
   (let ((posn (point)))
-    (while (and (elxiki/line-blank)
-                (= 0 (forward-line -1))))
-    (forward-line 0)
-    (when (elxiki-line-get)
-      (point))))
+    (elxiki-line-goto-beginning)
+    (while (and (elxiki-line-blank-p)
+                (elxiki-change-line -1)))
+    (if (elxiki-line-valid-p)
+        (point)
+      (goto-char posn)
+      nil)))
 
 (defun elxiki-line-goto-next ()
   "Goto the elxiki line following point if it exists.
 Returns point if the line is found and nil if it is not. Non
 elxiki lines will interrupt this."
-  (let ((posn (point)))
-    (while (and (elxiki/forward-line)
-                (elxiki/line-blank)))
-    (forward-line 0)
-    (if (= (point) posn)
-        nil
-      (point))))
+  (when (elxiki-line-valid-p)
+    (let ((posn (point)))
+      (while (and (elxiki-change-line 1)
+                  (elxiki-line-blank-p)))
+      (if (and (not (= (point) posn))
+               (elxiki-line-valid-p))
+          (point)
+        (goto-char posn)
+        nil))))
 
 (defun elxiki-line-goto-previous ()
-  "Goto the elxiki before point if it exists.
+  "Goto the elxiki line preceding point if it exists.
 Returns point if the line is found and nil if it is not. Non
 elxiki lines will interrupt this."
-  (elxiki-line-goto-current)
-  (let ((posn (point)))
-    (while (and (= 0 (forward-line -1))
-                (elxiki/line-blank)))
-    (forward-line 0)
-    (if (= (point) posn)
-        nil
-      (point))))
+  (let ((start (point))
+        (current (elxiki-line-goto-current)))
+    (when current
+      (while (and (elxiki-change-line -1)
+                  (elxiki-line-blank-p)))
+      (if (and (not (= (point) current))
+               (elxiki-line-valid-p))
+          (point)
+        (goto-char start)
+        nil))))
 
-(defun elxiki-line-goto-name ()
-  "Goto the name portion of the current elxiki item."
-  (elxiki-line-goto-current)
-  (let ((line (elxiki-line-get)))
-    (when line
-      (forward-to-indentation 0)
-      (forward-char (length (car line)))
-      (point))))
+(defun elxiki-line-goto-parent ()
+  "Goto the parent of the elxiki line at point.
+Return point if successful. If unsuccessful, return nil and don't
+move point."
+  (let ((start (point))
+        (indent (elxiki-line-get-indentation)))
+    (when (and (> indent 0)
+               (elxiki-line-valid-p))
+      (while (and (or (elxiki-line-valid-p)
+                      (elxiki-line-blank-p))
+                  (or (>= (elxiki-line-get-indentation) indent)
+                      (elxiki-line-blank-p))
+                  (elxiki-change-line -1)))
+      (if (and (elxiki-line-valid-p)
+               (< (elxiki-line-get-indentation) indent))
+          (point)
+        (goto-char start)
+        nil))))
 
-(defun elxiki-line-find-first-child (&optional pos)
-  "Return the position of the first child of elxiki line at POS.
-If POS is not specified, defaults to point.  Returns nil if the
-child does not exist, or POS is not at an elxiki line."
-  (when pos (goto-char pos))
-  (let ((indent (current-indentation)))
-    (save-excursion
-      (when (and (elxiki-line-get)
-                 (elxiki-line-goto-next)
-                 (> (current-indentation) indent))
-        (point)))))
-
-(defun elxiki-line-goto-first-child (&optional pos)
-  "Goto the result of `elxiki-line-find-first-child'."
-  (let ((n (elxiki-line-find-first-child pos)))
-    (when n
-      (goto-char n))))
+(defun elxiki-line-goto-first-child ()
+  "Goto the first child of the elxiki line at point.
+Return point if successful. If unsuccessful, return nil and don't
+move point."
+  (let ((start (point))
+        (indent (elxiki-line-get-indentation)))
+    (when (elxiki-line-valid-p)
+      (if (and (elxiki-line-valid-p)
+               (elxiki-line-goto-next)
+               (> (elxiki-line-get-indentation) indent))
+          (point)
+        (goto-char start)
+        nil))))
 
 (defun elxiki-line-goto-next-sibling ()
   "Goto the first sibling after elxiki line at point.
-Return nil if the sibling does not exist, or point is not at an
-elxiki line."
-  (elxiki-line-goto-current)
-  (let ((indent (current-indentation))
-        (start (point)))
+Return point if successful. If unsuccessful, return nil and don't
+move point."
+  (let ((indent (elxiki-line-get-indentation))
+        (real-start (point))
+        (start (elxiki-line-goto-current)))
     (while (and (elxiki-line-goto-next)
-                (> (current-indentation) indent)))
-    (and (elxiki-line-get)
-         (= (current-indentation) indent)
-         (not (= start (point)))
-         (point))))
+                (> (elxiki-line-get-indentation) indent)))
+    (if (and (elxiki-line-valid-p)
+             (not (elxiki-line-blank-p))
+             (= (elxiki-line-get-indentation) indent)
+             (not (= start (point))))
+        (point)
+      (goto-char real-start)
+      nil)))
 
 (defun elxiki-line-goto-previous-sibling ()
   "Goto the first sibling before elxiki line at point.
 Return nil if the sibling does not exist, or point is not at an
 elxiki line."
-  (elxiki-line-goto-current)
-  (let ((indent (current-indentation))
-        (start (point)))
+  (let ((indent (elxiki-line-get-indentation))
+        (real-start (point))
+        (start (elxiki-line-goto-current)))
     (while (and (elxiki-line-goto-previous)
-                (> (current-indentation) indent)))
-    (and (elxiki-line-get)
-         (= (current-indentation) indent)
-         (not (= start (point)))
-         (point))))
+                (> (elxiki-line-get-indentation) indent)))
+    (if (and (elxiki-line-valid-p)
+             (not (elxiki-line-blank-p))
+             (= (elxiki-line-get-indentation) indent)
+             (not (= start (point))))
+        (point)
+      (goto-char real-start)
+      nil)))
 
 (defun elxiki-line-goto-nth-sibling (n)
-  "Goto the nth sibling. Return point or nil if unsuccessful."
-  (elxiki-line-goto-current)
-  (while (and (> n 0)
-              (elxiki-line-goto-next-sibling)
-              (setq n (1- n))))
-  (while (and (< n 0)
-              (elxiki-line-goto-previous-sibling)
-              (setq n (1+ n))))
-  (when (= n 0) 
+  "Goto the nth sibling. Return point.
+If unsuccessful, return nil and don't move point."
+  (let ((start (point)))
+    (when (elxiki-line-goto-current)
+      (while (and (> n 0)
+                  (elxiki-line-goto-next-sibling)
+                  (setq n (1- n))))
+      (while (and (< n 0)
+                  (elxiki-line-goto-previous-sibling)
+                  (setq n (1+ n))))
+      (if (= n 0) 
+          (point)
+        (goto-char start)
+        nil))))
+
+(defun elxiki-line-goto-new-sibling ()
+  "Goto the position where a new sibling should be inserted.
+If successful, return point. If unsuccessful, return nil and
+don't move point. If this reaches the end of the buffer and
+cannot continue, it will instead return 'end."
+  (when (elxiki-line-goto-current)
+    (let ((indent (elxiki-line-get-indentation)))
+      (while (and (elxiki-line-goto-next)
+                  (>= (elxiki-line-get-indentation) indent)))
+      (cond ((< (elxiki-line-get-indentation) indent)
+             (point))
+            ((elxiki-change-line 1)
+             (point))
+            ('else
+             (end-of-line)
+             'end)))))
+
+(defun elxiki-line-goto-end-of-children ()
+  "Goto the line after your last child ends.
+If successful, return point. If unsuccessful, return nil and don't
+move point. If this reaches the end of the buffer and cannot
+continue, it will instead return 'end."
+  (when (elxiki-line-goto-current)
+    (let ((start (point))
+          (end (or (elxiki-line-goto-next-sibling)
+                   (elxiki-line-goto-new-sibling))))
+      (forward-line 0)
+      (if (= start (point))
+          (goto-char (point-max))
+        (forward-line -1)
+        (when (elxiki-line-blank-p)
+          (while (elxiki-line-blank-p)
+            (forward-line -1)))
+        (forward-line 1)
+        (point)))))
+
+(defun elxiki-line-goto-first-sibling ()
+  "Goto the first sibling in this group of siblings.
+If successful, return point. If unsuccessful, return nil and
+don't move point."
+  (when (elxiki-line-goto-previous-sibling)
+    (while (elxiki-line-goto-previous-sibling))
     (point)))
 
-(defun elxiki-line-find-append (&optional pos)
-  "Return the position where a sibling would be appended to at POS.
-If POS is not specified, defaults to point.  Returns nil if the
-POS is not at an elxiki line."
-  (save-excursion
-    (when pos (goto-char pos))
+(defun elxiki-line-insert (string &optional indent)
+  "Insert STRING at the line point, indenting to INDENT.
+If STRING is multi-line, then all lines are indented relative to
+each other. INDENT defaults to 0. Do nothing if STRING is empty
+or nil. If successful, move to insert point and return the (start
+end) region of the inserted text."
+  (when (> (length string) 0)
     (forward-line 0)
-    (let ((indent (current-indentation))
-          (start (point)))
-      (while (and (elxiki/forward-line)
-                  (or (elxiki/line-blank)
-                      (>= (current-indentation) indent))))
-      (if (< (current-indentation) indent)
-          (progn (forward-line 0)
-                 (point))
-        (unless (elxiki/forward-line)
-          (end-of-line)))
-      (when (not (= start (point)))
-        (point)))))
+    (let ((end (- (length string) 1)))
+      (when (string-equal "\n" (substring string end))
+        (setq string (substring string 0 end))))
+    (insert "\n")
+    (forward-line -1)
+    (let ((start (point))
+          end)
+      (insert string)
+      (elxiki-normalize-indentation start (point) indent 'no-error)
+      (setq end (point))
+      (goto-char start)
+      (list start end))))
 
-(defun elxiki-line-goto-append (&optional pos)
-  "Goto the result of `elxiki-line-find-append'."
-  (let ((n (elxiki-line-find-append pos)))
-    (when n
-      (goto-char n))))
+(defun elxiki-line-insert-after-children (string &optional indent)
+  "Insert STRING after all children with relative indentation INDENT.
+STRING is normalized so that the first line is treated as having
+0 indentation. INDENT defaults to 0. If successful, move to
+insert point and return the (start end) region of the inserted
+text."
+  (setq indent (+ (or indent 0) (elxiki-line-get-indentation)))
+  (let ((start (point))
+        (new (elxiki-line-goto-end-of-children)))
+      (if new
+          (progn (when (not (= ?\n (preceding-char)))
+                   (insert "\n"))
+                 (elxiki-line-insert string indent))
+        (goto-char start)
+        nil)))
 
-(defun elxiki-line-append-sibling (line &optional pos)
-  "Append LINE as a sibling of the elxiki line at POS.
-POS defaults to point. The added line has its indentation
-matched. Return the line's position."
-  (when (elxiki-line-get)
-    (save-excursion
-      (when pos (goto-char pos))
-      (let ((indent (current-indentation)))
-        (elxiki-line-goto-append)
-        (insert "\n")
-        (forward-line -1)
-        (indent-line-to indent)
-        (insert line)
-        (forward-to-indentation 0)
-        (point)))))
+(defun elxiki-line-insert-after-siblings (string &optional indent)
+  "Insert STRING after all siblings with relative indentation INDENT.
+STRING is normalized so that the first line is treated as having
+0 indentation. INDENT defaults to 0. If successful, move to
+insert point and return the (start end) region of the inserted
+text."
+  (setq indent (+ (or indent 0) (elxiki-line-get-indentation)))
+  (let ((start (point))
+        (new (elxiki-line-goto-new-sibling)))
+      (if new
+          (progn (when (eq 'end new)
+                   (insert "\n"))
+                 (elxiki-line-insert string indent))
+        (goto-char start)
+        nil)))
 
-(defun elxiki-line-append-child (line &optional pos)
-  "Append LINE as a child of the elxiki line at POS.
-POS defaults to point. Return the line's position."
-  (when (elxiki-line-get)
-    (save-excursion
-      (when pos (goto-char pos))
-      (if (elxiki-line-goto-first-child)
-          (elxiki-line-append-sibling line)
-        (let ((indent (current-indentation)))
-          (forward-line 1)
-          (insert "\n")
-          (forward-line -1)
-          (indent-line-to (+ 2 indent))
-          (insert line)
-          (forward-to-indentation 0)
-          (point))))))
+(defun elxiki-line-goto-sibling (name &optional before)
+  "Goto the sibling of the elxiki line at point matching NAME.
+NAME is a string to match against sibling names. If successful,
+return point. If unsuccessful, return nil and do not move
+point. If BEFORE is non-nil, this will also check siblings before
+point."
+  (when (elxiki-line-valid-p)
+    (let ((start (point))
+          (name-regexp (regexp-quote name)))
+      ;; Check siblings after first.
+      (while (and (save-excursion (elxiki-line-goto-name)
+                                  (not (looking-at-p name-regexp)))
+                  (numberp (elxiki-line-goto-next-sibling))))
+      (if (save-excursion (elxiki-line-goto-name)
+                          (looking-at-p name-regexp))
+          (point)
+        (goto-char start)
+        ;; Then check siblings before.
+        (when before
+          (while (and (elxiki-line-goto-previous-sibling)
+                      (save-excursion (elxiki-line-goto-name)
+                                      (not (looking-at-p name-regexp)))))
+          (if (save-excursion (elxiki-line-goto-name)
+                              (looking-at-p name-regexp))
+              (point)
+            (goto-char start)
+            nil))))))
 
-(defun elxiki-line-find-sibling (name &optional create pos)
-  "Return the position of sibling named NAME at or after POS.
-POS defaults to point. May return the current line. If CREATE is
-non-nil, then create the sibling if it does not exist."
-  (when (elxiki-line-get)
-    (save-excursion
-      (when pos (goto-char pos))
-      (let ((start (point)))
-        (while (and (not (elxiki/name-equal name (elxiki-line-get-name)))
-                    (elxiki-line-goto-next-sibling)))
-        (if (elxiki/name-equal name (elxiki-line-get-name))
-            (point)
-          (elxiki-line-append-sibling 
-           (concat "- " name)))))))
+(defun elxiki-line-goto-child (name)
+  "Goto the child of the elxiki line at point matching NAME.
+NAME is a string to match against child names. If successful,
+return point. If unsuccessful, return nil and do not move point."
+  (let ((start (point)))
+    (when (elxiki-line-goto-first-child)
+      (let ((result (elxiki-line-goto-sibling name)))
+        (if result
+            result
+          (goto-char start)
+          nil)))))
 
-(defun elxiki-line-goto-sibling (name &optional create pos)
-  "Goto the result of `elxiki-line-find-sibling'."
-  (let ((n (elxiki-line-find-sibling name create pos)))
-    (when n
-      (goto-char n))))
-
-(defun elxiki-line-find-child (name &optional create pos)
-  "Return the position of child named NAME.
-POS defaults to point. If CREATE is non-nil, then create the
-child if it does not exist."
-  (when (elxiki-line-get)
-    (save-excursion
-      (when pos (goto-char pos))
-      (if (elxiki-line-goto-first-child)
-          (elxiki-line-find-sibling name create)
-        (when create
-          (elxiki-line-append-child (concat "- " name)))))))
-
-(defun elxiki-line-goto-child (name &optional create pos)
-  "Goto the result of `elxiki-line-find-child'."
-  (let ((n (elxiki-line-find-child name create pos)))
-    (when n
-      (goto-char n))))
-
-(defun elxiki-line-find-route (route &optional create pos)
-  "Return the elxiki line position that results from following ROUTE.
-If POS is defined, start from there, otherwise start from point.
-ROUTE is a list of strings. Finds each child named by the each
-element of ROUTE in turn.  If ROUTE is a string, then split it
-along the '/' character.
-
-If CREATE is non-nil, then create the route if it does not
-exist."
-  (when (stringp route)
-    (setq route (split-string route "/" 'strip-empty)))
-  (when (elxiki-line-get)
-    (save-excursion
-      (when pos (goto-char pos))
+(defun elxiki-line-follow-route (route &optional create)
+  "Follow ROUTE through the current tree.
+ROUTE is a list of strings to match line names against. The first
+ROUTE item is used to find a sibling, and then each later ROUTE
+item is used to find a child. If CREATE is non-nil, then create
+elxiki lines you are trying to find that don't exist."
+  (when (elxiki-line-valid-p)
+    (let ((start (point)))
       (catch 'route
         (while route
-          (unless (elxiki-line-goto-sibling (car route) create)
-            (throw 'route nil))
-          (when (setq route (cdr route))
-            (unless (elxiki-line-goto-first-child)
-              (if create
-                  (elxiki-line-goto-child (car route) 'create)
-                (throw 'route nil)))))
-        (forward-to-indentation 0)
-        (point)))))
+          (unless (elxiki-line-goto-sibling (car route))
+            (if create
+                (elxiki-line-insert-after-siblings 
+                 (concat "- " (car route)) elxiki-line-indent-count)
+              (goto-char start)
+              (throw 'route nil)))
+          (if (setq route (cdr route))
+              (unless (elxiki-line-goto-child (car route))
+                (if create
+                    (progn
+                      (elxiki-line-insert-after-children 
+                       (concat "- " (car route)) elxiki-line-indent-count)
+                      (elxiki-line-goto-first-child))
+                  (goto-char start)
+                  (throw 'route nil)))
+            (throw 'route (point))))))))
 
-(defun elxiki-line-goto-route (route &optional create pos)
-  "Goto the result of `elxiki-line-find-route'."
-  (let ((n (elxiki-line-find-route route create pos)))
-    (when n
-      (goto-char n))))
-
-;; (defun elxiki-line-do-all-children (function &optional pos)
-;;   "Run FUNCTION once with point set for each child of line at POS.
-;; POS defaults to point."
-;;   (save-excursion
-;;     (when pos (goto-char pos))
-;;     (goto-char (elxiki-line-find-child))
-;;     (funcall function)
-;;     (while (setq pos (elxiki-line-find-sibling))
-;;       (goto-char pos)
-;;       (funcall function))))
-
-(defun elxiki-line-find-all-children (&optional pos)
-  "Return the (start end) region of all children of elxiki line at POS.
-If POS is not specified, defaults to point.  Returns nil if there
-are no children, or POS is not at an elxiki line."
+(defun elxiki-line-get-ancestry ()
+  "Gets the ancestry of elxiki line at point.
+This is a list of (prefix . name) cells, starting with the
+topmost parent and ending with this line. Return nil if not on a
+valid line."
   (save-excursion
-    (when pos (goto-char pos))
-    (forward-line 0)
+    (let (ancestry prefix name)
+      (while (and (progn (setq prefix (elxiki-line-get-prefix))
+                         (setq name (elxiki-line-get-name)))
+                  (or (elxiki-line-valid-p)
+                      (elxiki-line-blank-p))
+                  (setq ancestry (cons (list prefix name) ancestry))
+                  (elxiki-line-goto-parent)))
+      ancestry)))
+
+(defun elxiki-line-get-branch-region ()
+  "Return the (start end) region of the elxiki branch at point.
+Return nil if there is no branch."
+  (when (elxiki-line-valid-p)
+    (save-excursion
+      (forward-line 0)
+      (let ((start (point)))
+        (or (elxiki-line-goto-next-sibling)
+            (elxiki-line-goto-new-sibling))
+        (list start (point))))))
+
+(defun elxiki-line-get-children-region ()
+  "Return the (start end) region of the elxiki branch at point.
+Return nil if there is no branch."
+  (save-excursion
     (when (elxiki-line-goto-first-child)
       (let ((start (point)))
-        (elxiki-line-goto-append)
+        (elxiki-line-goto-new-sibling)
         (list start (point))))))
 
-(defun elxiki-line-find-self (&optional pos)
-  "Return the (start end) region of line at POS and all its children.
-If POS is not specified, it defaults to point. Return nil if this
-is not a valid elxiki line."
+(defun elxiki-line-get-siblings-region ()
+  "Get the (start end) region of this elxiki line and all its siblings.
+Return nil if not on an elxiki line."
   (save-excursion
-    (when pos (goto-char pos))
-    (when (elxiki-line-get)
+    (when (elxiki-line-valid-p)
+      (while (elxiki-line-goto-previous-sibling))
       (forward-line 0)
-      (let ((start point))
-        (or (elxiki-line-goto-next-sibling)
-            (elxiki-line-goto-append))
+      (let ((start (point)))
+        (elxiki-line-goto-new-sibling)
         (list start (point))))))
 
-(defun elxiki-line-add-children (children &optional prefix-function pos)
-  "Add CHILDREN underneath of the elxiki line at POS, properly indented.
-CHILDREN can either be a string or a list of strings. If it is a
-string, it is converted into a list of strings by splitting on
-the newline character.  If PREFIX-FUNCTION is specified, then
-apply it to every line before using it. If POS is not specified,
-it defaults to point.  Returns nil if POS is not an elxiki line."
+(defun elxiki-line-get-above-siblings-region ()
+  "Get the (start end) region of this elxiki of all silbings above this line.
+Return nil if not on an elxiki line, or there are no siblings above."
   (save-excursion
-    (when pos (goto-char pos))
-    (when (stringp children)
-      (setq children (split-string children "\n" 'no-blanks)))
-    (when (elxiki-line-get)
-      (let ((blank-prefix (apply 'concat
-                           (make-list (+ 2 (current-indentation)) " "))))
-        (end-of-line)
-        (dolist (child children)
-          (when (functionp prefix-function)
-            (setq child (funcall prefix-function child)))
-          (insert "\n")
-          (insert blank-prefix)
-          (insert child))))))
+    (let ((end (elxiki-line-goto-current)))
+      (when (elxiki-line-goto-previous-sibling)
+        (while (elxiki-line-goto-previous-sibling))
+        (list (point) end)))))
 
-(defun elxiki-line-set-prefix (prefix &optional pos)
-  "Changes elxiki line at POS to have PREFIX.
-POS defaults to point."
-  ;; `save-excursion' doesn't work if we're inside the prefix already,
-  ;; so save point manually.
-  (let ((old-pos (point)))
-    (when pos (goto-char pos))
-    (forward-to-indentation 0)
-    (let ((old-prefix (elxiki-line-get-prefix)))
-      (apply 'delete-region (elxiki/region (point) (length old-prefix)))
-      (insert prefix))
-    (goto-char old-pos)))
+(defun elxiki-line-get-below-siblings-region ()
+  "Get the (start end) region of this elxiki of all silbings below this line.
+Return nil if not on an elxiki line, or there are no siblings below."
+  (let ((start (elxiki-line-goto-next-sibling))
+        (end (elxiki-line-goto-new-sibling)))
+    (when (eq 'end end) (setq end (point-max)))
+    (when (and start end)
+      (list start end))))
 
-(defun elxiki-line-fold (&optional pos)
-  "Remove all children from the elxiki line at POS.
-If the prefix is currently \"- \", change it to \"+ \".  POS
-defaults to point."
-  (save-excursion
-    (when pos (goto-char pos))
-    (let ((children (elxiki-line-find-all-children)))
-      (when (string-equal "- " (elxiki-line-get-prefix))
-        (elxiki-line-set-prefix "+ "))
-      (when children
-        (apply 'delete-region children)))))
+(defun elxiki-line-delete-branch ()
+  "Delete the elxiki line at point and its children."
+  (let ((region (elxiki-line-get-branch-region)))
+    (when region
+      (apply 'delete-region region))))
+
+(defun elxiki-line-delete-children ()
+  "Delete the elxiki line at point's children."
+  (let ((region (elxiki-line-get-children-region)))
+    (when region
+      (apply 'delete-region region))))
 
 (defun elxiki-line-delete-siblings ()
   "Delete the siblings of elxiki line at point."
   (save-excursion
-    (let ((start (point))
-          (indent (current-indentation)))
-      (while (elxiki-line-goto-next-sibling)
-        (elxiki-line-delete-branch)
-        (goto-char start))
-      (goto-char start)
-      (while (elxiki-line-goto-previous-sibling)
-        (elxiki-line-delete-branch)))))
+    (let ((above (elxiki-line-get-above-siblings-region))
+          (below (elxiki-line-get-below-siblings-region)))
+      (when below (apply 'delete-region below))
+      (when above (apply 'delete-region above)))))
 
-(defun elxiki-line-get-ancestry (&optional pos)
-  "Gets the ancestry of elxiki line at POS.
-POS defaults to point."
+(defun elxiki-line-set-prefix (&optional prefix)
+  "Changes elxiki line at point to have PREFIX.
+You may optionally ignore or set PREFIX as nil, which will be
+interpreted as \"\"."
+  (unless prefix (setq prefix ""))
   (save-excursion
-    (when pos (goto-char pos))
-    (let (ancestry line)
-      (while (and (setq line (elxiki-line-get))
-                  (setq ancestry (cons line ancestry))
-                  (setq pos (elxiki-line-find-parent)))
-        (goto-char pos))
-      ancestry)))
+    (let ((old-prefix (progn (elxiki-line-goto-prefix)
+                             (elxiki-line-looking-at-prefix))))
+      (when old-prefix
+        (delete-region (point)
+                       (min (point-max) (+ (point) (length old-prefix)))))
+      (insert prefix))))
 
-(defun elxiki-line-match-siblings (predicate)
+(defun elxiki-line-doto-siblings (function &optional before)
+  "Perform FUNCTION with the point at the start of each sibling.
+If BEFORE is non-nil, then start at the first sibling instead of
+at the sibling at point."
+  (save-excursion
+    (when (if before (elxiki-line-goto-first-sibling)
+            (elxiki-line-goto-current))
+      (funcall function)
+      (while (elxiki-line-goto-next-sibling)
+        (funcall function)))))
+
+(defun elxiki-line-append-children (children &optional line-function)
+  "Add CHILDREN underneath of the elxiki line at point, properly indented.
+CHILDREN should be a (multiline) string, or a list of strings. If
+LINE-FUNCTION is non-nil, it is called at every line of CHILDREN
+after they have been inserted, at the base indentation level."
+  (save-excursion
+    (when (elxiki-line-goto-current)
+      (when (listp children)
+        (setq children (mapconcat 'identity children "\n")))
+      (let ((indent (+ (elxiki-line-get-indentation)
+                       elxiki-line-indent-count))
+            (region (elxiki-line-insert-after-children
+                     children elxiki-line-indent-count)))
+        (when line-function
+          (let ((line-function-2
+                 (lambda ()
+                   (forward-char indent)
+                   (funcall line-function))))
+            (apply 'elxiki-doto-lines line-function-2 region)))))))
+
+(defun elxiki-line-match-siblings (predicate &optional first)
   "Return a list of offsets for siblings which match PREDICATE.
 PREDICATE is a function of no arguments which is run when point
-is at the start of the sibling."
-  (save-excursion
-    (forward-line 0)
-    (let ((matches (when (funcall predicate) (list 0)))
-          (offset 0))
-      (while (elxiki-line-goto-next-sibling)
-        (setq offset (1+ offset))
-        (when (funcall predicate)
-          (setq matches (cons offset matches))))
-      (nreverse matches))))
+is at the start of the sibling. When FIRST is non-nil, start
+counting at the first sibling, instead of the current one."
+  (let ((offset 0)
+        matches)
+    (elxiki-line-doto-siblings
+     (lambda ()
+       (when (funcall predicate)
+         (setq matches (cons offset matches)))
+       (setq offset (1+ offset)))
+     first)
+    (nreverse matches)))
 
-(defun elxiki-line-delete-later-siblings ()
-  "Delete self and all siblings after."
-  (save-excursion
-    (let ((start (point)))
-      (when (elxiki-line-goto-append)
-        (delete-region start (point))))))
-
-(defun elxiki-line-delete-branch ()
-  "Deletes the elxiki line and children at point."
-  (save-excursion
-    (forward-line 0)
-    (let ((start (point)))
-      (when (or (elxiki-line-goto-next-sibling)
-                (elxiki-line-goto-append))
-        (delete-region start (point))))))
-
-(defun elxiki-line-filter-siblings (predicate &optional restrict-none)
+(defun elxiki-line-filter-siblings (predicate &optional restrict-none before)
   "Remove all siblings who do not satisfy PREDICATE.
 PREDICATE is run when point is at the start of the sibling. if
 RESTRICT-NONE is non-nil, then do not filter if it would result
-in no siblings left."
+in no siblings left. If BEFORE is non-nil, then also filter
+siblings before the current line as well."
   (save-excursion
-    (elxiki-line-goto-current)
-    (let ((matches (elxiki-line-match-siblings predicate))
-          (indent (current-indentation))
-          (offset 0))
-      (cond
-       (matches
-        (while matches
-          (while (< offset (car matches))
-            (elxiki-line-delete-branch)
-            (setq offset (1+ offset)))
-          (setq offset (1+ offset))
-          (if (elxiki-line-goto-next-sibling)
-              (setq matches (cdr matches))
-            (setq matches nil)
-            (elxiki-line-goto-append)))
-        (when (>= (current-indentation) indent)
-          (elxiki-line-delete-later-siblings)))
-       ((not restrict-none)
-        (elxiki-line-delete-siblings))))))
+    (when (if before (elxiki-line-goto-first-sibling)
+            (elxiki-line-goto-current))
+      (let ((matches (elxiki-line-match-siblings predicate))
+            (indent (current-indentation))
+            (offset 0))
+        (cond
+         (matches
+          (while matches
+            (while (< offset (car matches))
+              (elxiki-line-delete-branch)
+              (setq offset (1+ offset)))
+            (setq offset (1+ offset))
+            (if (elxiki-line-goto-next-sibling)
+                (setq matches (cdr matches))
+              (setq matches nil)
+              (elxiki-line-goto-new-sibling)))
+          (when (>= (current-indentation) indent)
+            (let ((region (elxiki-line-get-below-siblings-region)))
+              (when region (apply 'delete-region region)))))
+         ((not restrict-none)
+          (elxiki-line-delete-siblings)))))))
 
 (defun elxiki-line-filter-children (predicate &optional restrict-none)
   "Remove all children who do not satisfy PREDICATE.
@@ -512,42 +543,38 @@ in no siblings left."
       (elxiki-line-filter-siblings predicate restrict-none))))
 
 (defun elxiki-line-promote ()
-  "Promotes the current elxiki line and children."
+  "Promotes the current elxiki line and children to its parent's level.
+Return non-nil if successful."
   (save-excursion
-    (elxiki-line-goto-current)
-    (let ((start (point))
-          (end (elxiki-get-point
-                (or (elxiki-line-goto-next-sibling)
-                    (elxiki-line-goto-append))
-                (forward-line -1)
-                (end-of-line)))
-          (indent (current-indentation))
-          remove-count)
-      (when (elxiki-line-goto-parent)
-        (setq remove-count (- indent (current-indentation)))
-        (goto-char start)
-        (while (< (point) end)
-          (elxiki-line-goto-start)
-          (delete-region (point) (+ elxiki-line-indent-count (point)))
-          (setq end (- end elxiki-line-indent-count))
-          (elxiki-line-goto-next))))))
+    (save-restriction
+      (let ((region (elxiki-line-get-branch-region))
+            (indent (elxiki-line-get-indentation))
+            remove-count)
+        (when (elxiki-line-goto-parent)
+          (setq indent (- (elxiki-line-get-indentation) indent))
+          (apply 'narrow-to-region region)
+          (goto-char (point-min))
+          (while (not (eobp))
+            (elxiki-line-goto-beginning)
+            (elxiki-change-indentation indent 'no-error)
+            (forward-line 1))
+          t)))))
 
 (defun elxiki-line-replace-parent ()
   "Replace parent with current elxiki line.
 Return point, or nil if the operation fails."
   (save-excursion
-    (when (elxiki-line-find-parent)
-      (elxiki-line-goto-current)
-      (let ((start (point))
-            this)
-        (when (or (elxiki-line-goto-next-sibling)
-                  (elxiki-line-goto-append))
-          (setq this (buffer-substring start (point)))
-          (goto-char start)
-          (elxiki-line-goto-parent)
-          (elxiki-line-delete-branch)
-          (save-excursion (insert this))
-          (elxiki-line-promote))))))
+    (let ((parent (save-excursion (elxiki-line-goto-parent)))
+          this-region this)
+      (when parent
+        (elxiki-line-promote)
+        (setq this-region (elxiki-line-get-branch-region))
+        (setq this (apply 'buffer-substring this-region))
+        (apply 'delete-region this-region)
+        (goto-char parent)
+        (elxiki-line-delete-branch)
+        (save-excursion (insert this))
+        (point)))))
 
 (provide 'elxiki-line)
 ;;; elxiki-line.el ends here

@@ -2,9 +2,134 @@
 
 (require 'pprint)
 
+(defun elxiki-change-line (&optional n)
+  "Move to the beginning of the line, relative N lines from this one.
+Return point if succesful, or nil if unsuccessful. If
+unsuccessful, do not move point. The default value for N is 0."
+  (unless n (setq n 0))
+  (let ((origin (point))
+        start end)
+    (forward-line 0)
+    (setq start (point))
+    (forward-line n)
+    (forward-line 0)
+    (setq end (point))
+    (cond ((= n 0) (point))
+          ((= (abs n) (count-lines start end))
+           end)
+          ('else
+           (goto-char origin)
+           nil))))
+
+(put 'elxiki-negative-indent-error
+     'error-conditions
+     '(error elxiki-error elxiki-negative-indent-error))
+(put 'elxiki-negative-indent-error
+     'error-message
+     "Attempted negative indent")
+
+(defun elxiki-change-indentation (n &optional no-error)
+  "Adjust indentation of line at point by N.
+If this would result in negative indentation, instead set it to
+0, and signal an error if NO-ERROR is nil. Return t if
+successful."
+  (save-excursion
+    (forward-to-indentation 0)
+    (while (and (< n 0)
+                (not (bolp)))
+      (delete-char -1)
+      (setq n (1+ n)))
+    (while (> n 0)
+      (insert " ")
+      (setq n (1- n)))
+    (if (and (not no-error) (< n 0))
+        (signal 'elxiki-negative-indent-error nil)
+      t)))
+
+(defun elxiki-normalize-indentation (start end &optional indent no-error)
+   "From line at START to line at END, normalize to INDENT indentation.
+Relative indentation of the lines is kept. If NO-ERROR is
+non-nil, ignore errors resulting from attempting to create
+negative indentation.  INDENT defaults to 0. Does not move point."
+   (save-excursion
+     (goto-char start)
+     (forward-line 0)
+     (setq start (point))
+     (setq indent (- (or indent 0) (current-indentation)))
+     (goto-char end)
+     (while (and (>= (point) start)
+                 (not (bobp)))
+       (elxiki-change-indentation indent no-error)
+       (forward-line -1))
+     (when (and (bobp) (= (point) start))
+       (elxiki-change-indentation indent no-error))))
+
+(defun elxiki-strip-end-fslash (string)
+  "Strips the ending forward slash from STRING."
+  (replace-regexp-in-string (rx "/" (* blank) string-end)
+                            ""
+                            string))
+
+(defun elxiki-name-equal (name1 name2)
+  "Return non-nil if NAME1 and NAME2 are equal, disregarding a final /."
+  (string-equal (elxiki-strip-end-fslash name1)
+                (elxiki-strip-end-fslash name2)))
+
+(defun elxiki-narrow-to-lines (start end)
+  "Narrow to region containing lines."
+  (goto-char start)
+  (forward-line 0)
+  (setq start (point))
+  (goto-char end)
+  (end-of-line)
+  (narrow-to-region start (point)))
+
+(defun elxiki-doto-lines (function start end)
+  "Perform FUNCTION at the start of every line from START to END.
+Uses the lines that START and END are on, even if these points
+are halfway through these lines. FUNCTION should not change the
+line."
+  (save-excursion
+    (save-restriction
+      (elxiki-narrow-to-lines start end)
+      (goto-char (point-min))
+      (funcall function)
+      (while (elxiki-change-line 1)
+        (funcall function)))))
+
+
+
+
+
+
+
 (defmacro elxiki-get-point (&rest forms)
   "Evaluate FORMS, return (point), and then reset point."
   `(save-excursion ,@forms (point)))
+
+(defun elxiki/region (start length)
+  "Return the valid region starting from START up to LENGTH long."
+  (list start
+        (min (point-max)
+             (+ length start))))
+
+(defun elxiki/trim (string)
+  "Remove whitespace from edges of STRING."
+  (save-match-data
+    (string-match (rx string-start (* blank)
+                      (group (*? anything))
+                      (* blank) string-end)
+                  string)
+    (match-string 1 string)))
+
+(defun elxiki/match-buffer (string &optional pos)
+  "Match STRING against the characters following POS.
+POS defaults to point."
+  (unless pos (setq pos (point)))
+  (string-equal string
+                (buffer-substring-no-properties
+                 pos
+                 (min (point-max) (+ pos (length string))))))
 
 (defun elxiki-wrap-text (string &optional width)
   "Wraps STRING around target WIDTH."

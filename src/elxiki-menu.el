@@ -175,7 +175,7 @@ See `defmenu' documentation for how actions are specified."
   (let ((context (elxiki-context-from-ancestry
                   (elxiki-line-get-ancestry))))
     (when (string-equal "+ " (elxiki-context-get-prefix context))
-      (elxiki-line-fold))))
+      (elxiki-line-delete-children))))
 
 (defun elxiki-menu/prepare (result)
   "Prepare a section of text for insertion.
@@ -212,8 +212,8 @@ This involves aligning it and folding all children."
            ('else
             (with-current-buffer (elxiki-menu-get-buffer menu)
               (goto-char (point-min))
-              (elxiki-line-goto-route inner-path)
-              (let ((children (elxiki-line-find-all-children)))
+              (elxiki-line-follow-route (split-string inner-path "/"))
+              (let ((children (elxiki-line-get-children-region)))
                 (when children
                   (setq result
                         (apply 'buffer-substring-no-properties children)))))))
@@ -260,7 +260,6 @@ before editing."
 ;;                 (apply 'narrow-to-region (elxiki-line-find-self)))
 ;;               (while (not (= (point-max) (point)))
 ;;                 (if (elxiki-line-find-first-child
-                  
 
 ;;             (if (= 0 (length inner-path))
 ;;                 (progn

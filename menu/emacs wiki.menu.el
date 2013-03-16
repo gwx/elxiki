@@ -1,8 +1,6 @@
-(defmenu _root "
-| http://www.emacswiki.org/
+(defmenu _root "| http://www.emacswiki.org/
 | Enter a search term as an sub-menu.
-| i.e. @ emacs wiki/faces
-")
+| i.e. @ emacs wiki/faces")
 
 (defmenu _root/_many
   (let ((term (elxiki-drop-prefix "emacs wiki/" menu)))

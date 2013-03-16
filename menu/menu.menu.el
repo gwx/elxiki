@@ -1,10 +1,8 @@
-(defmenu _init "
-+ What is a Menu?
+(defmenu _init "+ What is a Menu?
   | Elxiki menus are menus you type into a buffer, and then
   | open with a call to `elxiki-command', bound to C-<return>
   | and M-<return> by default. Menus can expand to sub-menu
   | items, as well as run arbitrary emacs lisp code.
-  |
 + Defining Menus
   | To define a menu, type the name of one and then call `elxiki-menu-edit',
   | bound to C-c [ by default. This will find the default file for that menu.
@@ -28,5 +26,4 @@
   | to another.
   |
 > Here are all the defined menus:
-@ all/
-")
+@ all/")

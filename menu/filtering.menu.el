@@ -1,6 +1,5 @@
 (defmenu _init 
-  (format "
-> Filtering is: %s
+  (format "> Filtering is: %s
 + turn filtering %s
 | Immediately after doing `elxiki-command', you may filter
 | results by typing. Try it on the list of keys below:
@@ -15,8 +14,7 @@
   ! elxiki-filter-cursor-type
 | By default, M-<return> is bound to 
 | `elxiki-command-switch-filter', which is like 
-| `elxiki-command' but it negates the filter value.
-"
+| `elxiki-command' but it negates the filter value."
           (if elxiki-filter-inhibit "Off" "On")
           (if elxiki-filter-inhibit "on" "off")))
 

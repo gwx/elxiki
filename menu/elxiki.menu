@@ -18,6 +18,7 @@
     |
     | + and - are opened and closed folders.
     + Open Me
+      | And close me again.
     |
     | @ Opens a menu by name
     @ menu/
@@ -39,6 +40,14 @@
     & /home
   @ filtering
   + Directories:
+    | You can also open directories. Elxiki sees anything
+    | starting with /, ~, or . as a directory. Lines under
+    | a directory are run from that directory:
+    - /home/
+      ! default-directory
+      $ pwd
+    | And of course, they work with tramp:
+    | + /ssh:user@remote:~/
   | That's all for now!
-| Woosh:
-@ zone
+  | Woosh:
+  @ zone

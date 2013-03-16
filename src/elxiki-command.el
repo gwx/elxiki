@@ -59,7 +59,7 @@ precedence than other commands."
   "Perform the proper elxiki command at point."
   (interactive "P")
   (elxiki-filter -1)
-  (when (elxiki-line-get)
+  (when (elxiki-line-valid-p)
     (let ((commands elxiki-commands)
           (context (elxiki-context-from-ancestry (elxiki-line-get-ancestry))))
       (when (consp arg)
@@ -84,54 +84,53 @@ precedence than other commands."
 
 (defun elxiki-command-fold-p (context)
   "Return non-nil if the line at point should fold."
-  (elxiki-line-find-first-child))
+  (save-excursion (elxiki-line-goto-first-child)))
 
 (defun elxiki-command/fold (context)
   "Remove all children from the elxiki line.
 If the prefix is currently \"- \", change it to \"+ \"."
-  (elxiki-line-fold))
+  (when (string-equal "- " (elxiki-line-get-prefix))
+    (elxiki-line-set-prefix "+ "))
+  (elxiki-line-delete-children))
 
 (elxiki-command-register 'elxiki-command/fold 'elxiki-command-fold-p)
 
 (defun elxiki-command-directory-unfold-p (context)
   "If CONTEXT a directory that can be unfolded."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (member (elxiki-context-get-prefix context) '("+ " "- " nil))
        (eq 'directory (elxiki-context-get-type context))))
+
+(defun elxiki-command/modify-directory-line ()
+  "Modify the output of a directory line."
+  (let ((absolute (expand-file-name (elxiki-line-get-name))))
+    (elxiki-line-goto-prefix)
+    (cond ((file-directory-p absolute)
+           (insert "+ ")
+           (end-of-line)
+           (insert "/"))
+          ((file-executable-p absolute)
+           (insert "$ ./"))
+          ('else
+           (insert "& ")))))
 
 (defun elxiki-command/unfold-directory (context)
   "Adds the directory's files as children lines."
   (elxiki-line-set-prefix "- ")
-  (let* ((default-directory (elxiki-context-get-directory context))
-         (line-prepare
-          (lambda (line)
-            (let ((absolute (expand-file-name line)))
-              (cond ((file-directory-p absolute)
-                     (concat "+ " line "/"))
-                    ((file-executable-p absolute)
-                     (concat "$ ./" line))
-                    ('else
-                     (concat "& " line)))))))
-    (elxiki-line-add-children (directory-files default-directory) 
-                              line-prepare)
+  (let* ((default-directory (elxiki-context-get-directory context)))
+    (elxiki-line-append-children
+     (directory-files default-directory)
+     'elxiki-command/modify-directory-line)
     (elxiki-filter)))
 
 (defun elxiki-command/unfold-directory-unhidden (context)
   "Adds the directory's files (ignoring hidden) as children lines."
   (elxiki-line-set-prefix "- ")
   (let* ((default-directory (elxiki-context-get-directory context))
-         (regex (rx string-start (not (any "."))))
-         (line-prepare
-          (lambda (line)
-            (let ((absolute (expand-file-name line)))
-              (cond ((file-directory-p absolute)
-                     (concat "+ " line "/"))
-                    ((file-executable-p absolute)
-                     (concat "$ ./" line))
-                    ('else
-                     (concat "& " line)))))))
-    (elxiki-line-add-children (directory-files default-directory nil regex)
-                              line-prepare)
+         (regex (rx string-start (not (any ".")))))
+    (elxiki-line-append-children
+     (directory-files default-directory nil regex)
+     'elxiki-command/modify-directory-line)
     (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/unfold-directory-unhidden
@@ -143,7 +142,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-shell-unfold-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (string-equal "$ " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-shell (context)
@@ -151,8 +150,8 @@ If the prefix is currently \"- \", change it to \"+ \"."
   (let ((default-directory (elxiki-context-get-directory context))
         (shell-file-name "/bin/bash")
         (name (elxiki-context-get-name context))
-        (line-prepare (lambda (line) (concat "| " line))))
-    (elxiki-line-add-children (shell-command-to-string name) line-prepare)
+        (line-prepare (lambda () (insert "| "))))
+    (elxiki-line-append-children (shell-command-to-string name) line-prepare)
     (message "Ran: %s" name)
     (elxiki-filter)))
 
@@ -161,7 +160,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-async-shell-p (context)
   "If CONTEXT indicates a shell command that can be unfolded."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (string-equal "% " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/run-async (context)
@@ -209,16 +208,16 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-emacs-lisp-p (context)
   "If CONTEXT indicates an emacs lisp command that can be unfolded."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (string-equal "! " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/unfold-emacs-lisp (context)
   "Adds the output of the emacs lisp command as children lines."
   (let ((default-directory (elxiki-context-get-directory context))
         (name (elxiki-context-get-name context))
-        (line-prepare (lambda (line) (concat "| " line))))
-    (elxiki-line-add-children (pprint-to-string (eval (read name))) 
-                              line-prepare)
+        (line-prepare (lambda () (insert "| "))))
+    (elxiki-line-append-children (pprint-to-string (eval (read name))) 
+                                 line-prepare)
     (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/unfold-emacs-lisp
@@ -226,7 +225,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-silent-emacs-lisp-p (context)
   "If CONTEXT indicates a silent emacs lisp command that can be run."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (string-equal "!! " (elxiki-context-get-prefix context))))
 
 (defun elxiki-command/silent-run-emacs-lisp (context)
@@ -240,7 +239,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
 
 (defun elxiki-command-menu-act-p (context)
   "If CONTEXT indicates a menu to act upon."
-  (and (not (elxiki-line-find-first-child))
+  (and (not (save-excursion (elxiki-line-goto-first-child)))
        (eq 'menu (elxiki-context-get-type context))))
 
 (defun elxiki-command/menu-act (context)
@@ -255,7 +254,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
       (if (elxiki-context-menu-root-p context)
           (elxiki-line-set-prefix "@ ")
         (elxiki-line-set-prefix "+ ")))
-    (elxiki-line-add-children (elxiki-menu-act context))
+    (elxiki-line-append-children (elxiki-menu-act context))
     (elxiki-filter)))
 
 (elxiki-command-register 'elxiki-command/menu-act

@@ -49,7 +49,8 @@ See `elxiki-filter-map'."
               (setq elxiki-filter-cursor-previous cursor-type)
               (setq cursor-type elxiki-filter-cursor-type)))
         (elxiki-filter -1))
-    (when elxiki-filter-cursor-type
+    (when (and elxiki-filter-cursor-type
+               elxiki-filter-cursor-previous)
       (setq cursor-type elxiki-filter-cursor-previous))))
 
 (defun elxiki-filter-stop ()
@@ -71,7 +72,7 @@ See `elxiki-filter-map'."
 (defun elxiki-filter-replace-parent ()
   "Make the entry replace the parent and then act on it."
   (interactive)
-  (when (elxiki-line-find-parent)
+  (when (save-excursion (elxiki-line-goto-parent))
     (elxiki-line-replace-parent)
     (elxiki-filter -1)
     (elxiki-command)))

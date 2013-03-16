@@ -10,6 +10,9 @@
 ;;; Code:
 (defvar elxiki-directory (file-name-directory (or (buffer-file-name) load-file-name))
   "The home directory for elxiki.")
+(defvar elxiki-test-directory 
+  (file-name-directory (concat elxiki-directory "test/"))
+  "The directory for elxiki tests.")
 (add-to-list 'load-path (concat elxiki-directory "src/"))
 
 (require 'elxiki-util)
@@ -35,6 +38,14 @@
       (font-lock-add-keywords nil elxiki-mode-keywords 'append)
     (font-lock-remove-keywords nil elxiki-mode-keywords))
   (font-lock-fontify-buffer))
+
+(defun elxiki-load-tests ()
+  "Load the elxiki tests so you can run them with `ert'."
+  (interactive)
+  (mapc 'load (directory-files elxiki-test-directory
+                               t
+                               (rx ".el" string-end)
+                               'no-sort)))
 
 (provide 'elxiki)
 ;;; elxiki.el ends here
