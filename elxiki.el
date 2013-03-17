@@ -31,11 +31,11 @@
 (define-key elxiki-mode-map (kbd "M-<return>") 'elxiki-command-switch-filter)
 (define-key elxiki-mode-map (kbd "C-c [") 'elxiki-menu-edit)
 
-(define-minor-mode elxiki-mode nil
+(define-minor-mode elxiki-mode "Elxiki mode."
   :lighter " ElXiKi"
   :keymap elxiki-mode-map
   (if (and elxiki-mode elxiki-use-font-lock)
-      (font-lock-add-keywords nil elxiki-mode-keywords 'append)
+      (font-lock-add-keywords nil elxiki-mode-keywords)
     (font-lock-remove-keywords nil elxiki-mode-keywords))
   (font-lock-fontify-buffer))
 

@@ -4,150 +4,81 @@
 (defvar elxiki-use-font-lock t
   "If nil, elxiki will not modify fonts when turned on.")
 
-(defface elxiki-closed-prefix-face
+(defvar elxiki-mode-keywords nil
+  "List of font lock keywords to use for elxiki mode.
+Has the same format as `font-lock-keywords'. Use
+`elxiki-font-define-prefix-face' to create entries.")
+
+(defmacro elxiki-font-define-prefix-face (name prefix prefix-face name-face)
+  "Define an elxiki prefix face.
+NAME is a string naming the faces. PREFIX is the prefix
+associated with the faces. PREFIX-FACE and NAME-FACE are the two
+faces used for the prefix and name of the given elxiki lines."
+  (declare (indent 2))
+  (let* ((base-name (symbol-name name))
+         (prefix-face-name
+          (intern (concat "elxiki-" base-name "-prefix-face")))
+         (name-face-name
+          (intern (concat "elxiki-" base-name "-name-face")))
+         (regexp-name
+          (intern (concat "elxiki-" base-name "-regexp"))))
+  `(progn
+     (defface ,prefix-face-name ,prefix-face
+       ,(concat "Face for the " base-name " prefix ( " prefix " )."))
+     (defface ,name-face-name ,name-face
+       ,(concat "Face for the " base-name " prefix ( " prefix " ) name."))
+     (defvar ,regexp-name
+       (rx line-start (* blank) (group ,prefix) (group (* nonl)))
+       ,(concat "Regular expression for the elxiki " base-name " face."))
+     (add-to-list 'elxiki-mode-keywords 
+                  (list ,regexp-name 1 '',prefix-face-name t))
+     (add-to-list 'elxiki-mode-keywords 
+                  (list ,regexp-name 2 '',name-face-name t)))))
+
+(font-lock-add-keywords
+ 'emacs-lisp-mode
+ `((,(rx "(" (group word-start "elxiki-font-define-prefix-face" word-end))
+    . 1)))
+
+(elxiki-font-define-prefix-face menu "@ "
   '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
-  "Face for the closed prefix ( + ).")
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
-(defface elxiki-closed-name-face
-  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
-  "Face for the closed prefix ( + ) names.")
-
-(defface elxiki-opened-prefix-face
+(elxiki-font-define-prefix-face closed "+ "
   '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
-  "Face for the opened prefix ( - ).")
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
-(defface elxiki-opened-name-face
-  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
-  "Face for the opened prefix ( - ) names.")
+(elxiki-font-define-prefix-face opened "- "
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
-(defface elxiki-point-prefix-face
-  '((t :inherit (variable-pitch shadow) :height 1.3))
-  "Face for the point prefix ( & ).")
-
-(defface elxiki-point-name-face
-  '((t :inherit 'variable-pitch :height 1.15))
-  "Face for the point prefix ( & ) names.")
-
-(defface elxiki-output-prefix-face
+(elxiki-font-define-prefix-face text "|"
   '((t :inherit 'shadow))
-  "Face for the output prefix ( | ).")
+  '((t :inherit 'font-lock-comment-face)))
 
-(defface elxiki-output-name-face
-  '((t :inherit 'font-lock-comment-face))
-  "Face for the output prefix ( | ) names.")
+(elxiki-font-define-prefix-face heading "> "
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.4))
+  '((t :inherit (variable-pitch font-lock-string-face) :height 1.4)))
 
-(defface elxiki-shell-prefix-face
-  '((t :inherit 'font-lock-builtin-face))
-  "Face for the shell prefix ( $ )..")
+(elxiki-font-define-prefix-face emacs-lisp "! "
+  '((t :inherit 'font-lock-function-name-face :height 1.3))
+  '((t :inherit 'font-lock-string-face :height 1.2)))
 
-(defface elxiki-shell-name-face
-  '((t :inherit 'font-lock-function-name-face))
-  "Face for the shell prefix ( | ) names.")
+(elxiki-font-define-prefix-face emacs-lisp-silent "!! "
+  '((t :inherit 'font-lock-function-name-face :height 1.3))
+  '((t :inherit 'font-lock-string-face :height 1.2)))
 
-(defface elxiki-async-prefix-face
-  '((t :inherit 'font-lock-builtin-face))
-  "Face for the async prefix ( % ).")
+(elxiki-font-define-prefix-face find "& "
+  '((t :inherit (variable-pitch shadow) :height 1.2))
+  '((t :inherit 'variable-pitch :height 1.2)))
 
-(defface elxiki-async-name-face
-  '((t :inherit 'font-lock-function-name-face))
-  "Face for the async prefix ( % ) names.")
+(elxiki-font-define-prefix-face shell-sync "$ "
+  '((t :inherit 'font-lock-builtin-face :height 1.3))
+  '((t :inherit 'font-lock-variable-face :height 1.2)))
 
-(defface elxiki-code-prefix-face
-  '((t :inherit 'font-lock-function-name-face))
-  "Face for the code prefix ( ! ).")
-
-(defface elxiki-code-name-face
-  '((t :inherit 'font-lock-builtin-face))
-  "Face for the code prefix ( ! ) names.")
-
-(defface elxiki-code-silent-prefix-face
-  '((t :inherit 'font-lock-function-name-face))
-  "Face for the silent code prefix ( !! ).")
-
-(defface elxiki-code-silent-name-face
-  '((t :inherit 'font-lock-builtin-face))
-  "Face for the silent code prefix ( !! ) names.")
-
-(defface elxiki-menu-prefix-face
-  '((t :inherit 'font-lock-function-name-face))
-  "Face for the menu prefix ( @ ).")
-
-(defface elxiki-menu-name-face
-  '((t :inherit (variable-pitch font-lock-string-face) :height 1.15))
-  "Face for the menu prefix ( @ ) names.")
-
-(defface elxiki-heading-prefix-face
-  '((t :inherit (variable-pitch font-lock-builtin-face) :height 1.3))
-  "Face for the heading prefix ( > ).")
-
-(defface elxiki-heading-name-face
-  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
-  "Face for the heading prefix ( > ) names.")
-
-;;; Keyword Regexs
-(defvar elxiki-closed-regex
-  (rx line-start (* blank) (group "+ ") (group (* nonl)))
-  "Regular expression for the elxiki closed face.")
-
-(defvar elxiki-opened-regex
-  (rx line-start (* blank) (group "- ") (group (* nonl)))
-  "Regular expression for the elxiki opened face.")
-
-(defvar elxiki-point-regex
-  (rx line-start (* blank) (group "& ") (group (* nonl)))
-  "Regular expression for the elxiki point face.")
-
-(defvar elxiki-output-regex
-  (rx line-start (* blank) (group "|" (? " ")) (group (* nonl)))
-  "Regular expression for elxiki output.")
-
-(defvar elxiki-shell-regex
-  (rx line-start (* blank) (group "$ ") (group (* nonl)))
-  "Regex for highlighting shell commands.")
-
-(defvar elxiki-async-regex
-  (rx line-start (* blank) (group "% ") (group (* nonl)))
-  "Regex for highlighting async commands.")
-
-(defvar elxiki-code-regex
-  (rx line-start (* blank) (group "! ") (group (* nonl)))
-  "Regular expression for the elxiki code face.")
-
-(defvar elxiki-code-silent-regex
-  (rx line-start (* blank) (group "!! ") (group (* nonl)))
-  "Regular expression for the elxiki code face.")
-
-(defvar elxiki-menu-regex
-  (rx line-start (* blank) (group "@ ") (group (* nonl)))
-  "Regular expression for the elxiki menu face.")
-
-(defvar elxiki-heading-regex
-  (rx line-start (* blank) (group "> ") (group (* nonl)))
-  "Regular expression for the elxiki heading face.")
-
-;;; Keyword Definition
-(defvar elxiki-mode-keywords
-  `((,elxiki-closed-regex 1 'elxiki-closed-prefix-face t)
-    (,elxiki-closed-regex 2 'elxiki-closed-name-face t)
-    (,elxiki-opened-regex 1 'elxiki-opened-prefix-face t)
-    (,elxiki-opened-regex 2 'elxiki-opened-name-face t)
-    (,elxiki-point-regex 1 'elxiki-point-prefix-face t)
-    (,elxiki-point-regex 2 'elxiki-point-name-face t)
-    (,elxiki-output-regex 1 'elxiki-output-prefix-face t)
-    (,elxiki-output-regex 2 'elxiki-output-name-face t)
-    (,elxiki-shell-regex 1 'elxiki-shell-prefix-face t)
-    (,elxiki-shell-regex 2 'elxiki-shell-name-face t)
-    (,elxiki-async-regex 1 'elxiki-async-prefix-face t)
-    (,elxiki-async-regex 2 'elxiki-async-name-face t)
-    (,elxiki-code-regex 1 'elxiki-code-prefix-face t)
-    (,elxiki-code-regex 2 'elxiki-code-name-face t)
-    (,elxiki-code-silent-regex 1 'elxiki-code-silent-prefix-face t)
-    (,elxiki-code-silent-regex 2 'elxiki-code-silent-name-face t)
-    (,elxiki-menu-regex 1 'elxiki-menu-prefix-face t)
-    (,elxiki-menu-regex 2 'elxiki-menu-name-face t)
-    (,elxiki-heading-regex 1 'elxiki-heading-prefix-face t)
-    (,elxiki-heading-regex 2 'elxiki-heading-name-face t))
-  "List to pass to `font-lock-add-keywords'.")
+(elxiki-font-define-prefix-face shell-async "% "
+  '((t :inherit 'font-lock-builtin-face :height 1.3))
+  '((t :inherit 'font-lock-variable-face :height 1.2)))
 
 (provide 'elxiki-font)
 ;;; elxiki-font.el ends here
