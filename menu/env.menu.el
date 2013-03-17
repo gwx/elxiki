@@ -1,6 +1,7 @@
 (defmenu _init
   (concat "| Activate a line to set it.
-| e.g. @ env/aaa=bbb, or in the list at the end.
+| e.g. @ env/PATH=/opt/bin/:${PATH}, or you can call
+| `elxiki-command' on any of the following lines:
 > All Environment Variables:
 "
           (mapconcat (lambda (s) (concat "- " s))

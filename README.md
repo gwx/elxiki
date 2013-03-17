@@ -5,7 +5,7 @@ Elxiki is a emacs minor mode that performs context-aware actions based
 on the line at point. For instance, on the line "+ /home/", it will
 list all files in the home directory below it. Activating one of those
 lines will find that file. Other examples are "google/emacs/" to bring
-up a google search, or "env/" to list all your environment variables
+up a google search, or "env/" to list all your environment variables,
 which can then be edited directly.
 
 Inspired by [Xiki](http://xiki.org), but this time implemented in elisp.
