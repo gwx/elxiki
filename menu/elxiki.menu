@@ -1,8 +1,8 @@
 > Welcome to Elxiki!
 | This is an imitation of http://xiki.org, written in pure
-| emacs lisp. Use `elxiki-command' (C-<return>) to do
-| a context-aware action at point. Try it on the + line
-| following:
+| emacs lisp. Use `elxiki-command-no-filter' (C-<return>) 
+| to do a context-aware action at point. Try it on the 
+| + line following:
 - Introduction:
   - Kinds of lines:
     | Elxiki organizes things by line. Each line is split up

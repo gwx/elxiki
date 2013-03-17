@@ -74,10 +74,10 @@ precedence than other commands."
                    (setq commands nil))
           (setq commands (cdr commands)))))))
 
-(defun elxiki-command-switch-filter (&optional arg)
-  "Perform `elxiki-command' at point, flipping the norma value for `elxiki-filter-inhibit'."
+(defun elxiki-command-no-filter (&optional arg)
+  "Perform `elxiki-command' at point, suppressing filtering."
   (interactive "P")
-  (let ((elxiki-filter-inhibit (not elxiki-filter-inhibit)))
+  (let ((elxiki-filter-inhibit t))
     (elxiki-command arg)))
 
 ;;; Builtin Commands:

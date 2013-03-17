@@ -1,0 +1,20 @@
+| Immediately after doing `elxiki-command', bound by default
+| to M-<return>, you may filter results by typing. Try it on
+| the list of keys below:
++ Filtering Keys
+  | Here are the default keys. They are in the keymap
+  | `elxiki-filter-map' if you wish to change them.
+  |
+  | Continue filtering: letter or number
+  | Stop filtering results: C-g, SPC
+  | Perform another action: <return>, M-<return>
+  | Perform another action without filtering: C-<return>
+  | Perform action and hide siblings: <tab>
+  | Perform action and replace parent: C-/
++ Cursor
+  | While filtering, your cursor will change to a box.
+  | You can change this with the variable:
+  ! elxiki-filter-cursor-type
+| By default, M-<return> is bound to `elxiki-command'
+| and C-<return> is bound to `elxiki-command-no-filter',
+| which never performs filtering.
