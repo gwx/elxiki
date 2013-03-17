@@ -73,20 +73,5 @@ Can be 'directory, 'menu, or 'misc."
   "Return non-nil of CONTEXT describes a root level menu."
   (= 1 (length (split-string (elxiki-context-get-menu context) "/" 'noempty))))
 
-;; (defun elxiki-context-default-directory (context)
-;;   "Gets the default directory from CONTEXT."
-;;   (let ((path (cdr (assoc 'path context))))
-;;     (if (and path (member (string-to-char path) '(?. ?~ ?/)))
-;;         (expand-file-name path)
-;;       (expand-file-name default-directory))))
-
-;; (defun elxiki-context-directory-p (context)
-;;   "If CONTEXT describes a directory line (that exists)."
-;;   (let ((default-directory (elxiki-context-default-directory context))
-;;         (name (elxiki-context-get-name context)))
-;;     (and default-directory
-;;          (elxiki/ends-slash-p name)
-;;          (file-directory-p (expand-file-name default-directory)))))
-
 (provide 'elxiki-context)
 ;;; elxiki-context.el ends here
