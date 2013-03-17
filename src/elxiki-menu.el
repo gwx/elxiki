@@ -5,12 +5,12 @@
 (require 'elxiki-context)
 
 (defvar elxiki-menu-directory (expand-file-name "~/.emacs.d/elxiki-menus/")
-  "Where elxiki keeps its menu definitions.
+  "Where elxiki keeps its user menu definitions.
 Must end in a /.")
 
 (defvar elxiki-menu-install-directory
   (concat elxiki-directory "menu/")
-  "Where the default elxiki menus are held.")
+  "Where the built in elxiki menus are held.")
 
 (defvar elxiki-menu-path
   (list elxiki-menu-directory elxiki-menu-install-directory)
@@ -125,7 +125,7 @@ The menu body is passed the following arguments:
 * name :: The rest of the line being called.
 * directory :: The directory the menu is being run under.
 * menu :: The full menu path being called.
-* type :: Should always be 'menu."
+* type :: Should always be the symbol menu."
   (declare (indent defun))
   `(setq *elxiki-menu-functions*
          (cons (cons (elxiki-menu--item-to-regexp (symbol-name ',name))
