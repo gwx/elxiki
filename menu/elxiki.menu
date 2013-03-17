@@ -3,12 +3,13 @@
 | emacs lisp. Use `elxiki-command' (C-<return>) to do
 | a context-aware action at point. Try it on the + line
 | following:
-|
 - Introduction:
   - Kinds of lines:
     | Elxiki organizes things by line. Each line is split up
     | into a 'prefix' and 'name'. Different prefixes do
-    | different things when acted upon:
+    | different things when acted upon, listed below. Elxiki
+    | recognizes any line that starts with one of these
+    | prefixes or that ends with a /.
     |
     | > is a Heading
     > Like This
@@ -20,7 +21,7 @@
     + Open Me
       | And close me again.
     |
-    | @ Opens a menu by name
+    | @ Opens a menu by name.
     @ menu/
     |
     | ! evaluates elisp code.
@@ -38,7 +39,6 @@
     | & Finds a file. C-u to open in another window,
     | C-u C-u to open in another frame.
     & /home
-  @ filtering
   + Directories:
     | You can also open directories. Elxiki sees anything
     | starting with /, ~, or . as a directory. Lines under
@@ -48,6 +48,7 @@
       $ pwd
     | And of course, they work with tramp:
     | + /ssh:user@remote:~/
+  @ filtering
   | That's all for now!
   | Woosh:
   @ zone
