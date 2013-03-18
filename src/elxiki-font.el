@@ -41,15 +41,15 @@ faces used for the prefix and name of the given elxiki lines."
     . 1)))
 
 (elxiki-font-define-prefix-face menu "@ "
-  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.2))
   '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
 (elxiki-font-define-prefix-face closed "+ "
-  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.2))
   '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
 (elxiki-font-define-prefix-face opened "- "
-  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.3))
+  '((t :inherit (variable-pitch font-lock-function-name-face) :height 1.2))
   '((t :inherit (variable-pitch font-lock-string-face) :height 1.2)))
 
 (elxiki-font-define-prefix-face text "|"
@@ -61,11 +61,11 @@ faces used for the prefix and name of the given elxiki lines."
   '((t :inherit (variable-pitch font-lock-string-face) :height 1.4)))
 
 (elxiki-font-define-prefix-face emacs-lisp "! "
-  '((t :inherit 'font-lock-function-name-face :height 1.3))
+  '((t :inherit 'font-lock-function-name-face :height 1.2))
   '((t :inherit 'font-lock-string-face :height 1.2)))
 
 (elxiki-font-define-prefix-face emacs-lisp-silent "!! "
-  '((t :inherit 'font-lock-function-name-face :height 1.3))
+  '((t :inherit 'font-lock-function-name-face :height 1.2))
   '((t :inherit 'font-lock-string-face :height 1.2)))
 
 (elxiki-font-define-prefix-face find "& "
@@ -73,11 +73,11 @@ faces used for the prefix and name of the given elxiki lines."
   '((t :inherit 'variable-pitch :height 1.2)))
 
 (elxiki-font-define-prefix-face shell-sync "$ "
-  '((t :inherit 'font-lock-builtin-face :height 1.3))
+  '((t :inherit 'font-lock-builtin-face :height 1.2))
   '((t :inherit 'font-lock-variable-face :height 1.2)))
 
 (elxiki-font-define-prefix-face shell-async "% "
-  '((t :inherit 'font-lock-builtin-face :height 1.3))
+  '((t :inherit 'font-lock-builtin-face :height 1.2))
   '((t :inherit 'font-lock-variable-face :height 1.2)))
 
 (provide 'elxiki-font)
