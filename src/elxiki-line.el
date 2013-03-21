@@ -482,7 +482,7 @@ after they have been inserted, at the base indentation level."
                        elxiki-line-indent-count))
             (region (elxiki-line-insert-after-children
                      children elxiki-line-indent-count)))
-        (when line-function
+        (when (and line-function region)
           (let ((line-function-2
                  (lambda ()
                    (forward-char indent)
