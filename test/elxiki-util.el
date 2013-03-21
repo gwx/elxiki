@@ -184,3 +184,8 @@ Should return nil because it cannot go to next line."
                        6 11)
     (should (string-equal "AAA\n+ BBB\n+ CCC"
                           (buffer-string)))))
+
+(ert-deftest elxiki-path-root ()
+  (should (string-equal "root/" (elxiki-path-root "root/sub/sub2")))
+  (should (string-equal "/" (elxiki-path-root "/home")))
+  (should (string-equal "whole-path" (elxiki-path-root "whole-path"))))

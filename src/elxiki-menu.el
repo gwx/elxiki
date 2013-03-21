@@ -38,7 +38,7 @@ Checks for MENU.menu and MENU.menu.el in all folders in path."
   "Load the menu described by CONTEXT so it is ready to process.
 Return a description of the menu. If FORCE is non-nil, load an
 empty menu if it does not exist."
-  (let* ((root-menu-name (elxiki/path-root (elxiki-context-get-menu context)))
+  (let* ((root-menu-name (elxiki-path-root (elxiki-context-get-menu context)))
          (menu-file (elxiki-menu-find root-menu-name))
          buffer)
     (cond
@@ -184,7 +184,7 @@ This involves aligning it and folding all children."
     (let (pos)
       (with-temp-buffer
         (insert result)
-        (elxiki/normalize-buffer-indentation)
+        (elxiki-normalize-indentation (point-min) (point-max) nil 'no-error)
         (goto-char (point-min))
         (elxiki-menu/fold-if-closed-prefix)
         (while (elxiki-line-goto-next)

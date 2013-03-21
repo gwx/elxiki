@@ -97,6 +97,14 @@ line."
       (while (elxiki-change-line 1)
         (funcall function)))))
 
+(defun elxiki-path-root (path)
+  "Drop PATH after first / character."
+  (save-match-data
+    (when (string-match (rx string-start (* blank)
+                            (group (* (not (any "/"))) (? "/")))
+                        path)
+      (match-string 1 path))))
+
 
 
 
