@@ -38,12 +38,14 @@ Checks for MENU.menu and MENU.menu.el in all folders in path."
   "Load the menu described by CONTEXT so it is ready to process.
 Return a description of the menu. If FORCE is non-nil, load an
 empty menu if it does not exist."
-  (let* ((root-menu-name (elxiki-path-root (elxiki-context-get-menu context)))
+  (let* ((root-menu-name
+          (elxiki-strip-end-fslash
+           (elxiki-path-root (elxiki-context-get-menu context))))
          (menu-file (elxiki-menu-find root-menu-name))
          buffer)
     (cond
      (menu-file
-      (setq buffer (generate-new-buffer 
+      (setq buffer (generate-new-buffer
                     (concat elxiki-menu-buffer-name-prefix
                             root-menu-name)))
       (cond
@@ -63,7 +65,9 @@ empty menu if it does not exist."
               (insert (apply text-fun context))))
           (list buffer *elxiki-menu-functions* menu-file)))))
      (force
-      (list (generate-new-buffer elxiki-menu-buffer-name-prefix) 
+      (list (generate-new-buffer
+             (concat elxiki-menu-buffer-name-prefix
+                     root-menu-name))
             nil
             (concat (file-name-as-directory elxiki-menu-directory)
                     (concat root-menu-name ".menu")))))))
@@ -107,7 +111,7 @@ There are several special names you can use in the path:
 * _root is the root of the menu. (defmenu A ...) will match
   /Menu/B/A as well as /Menu/A, but (defmenu _root/A ...) will
   only match the latter.
-* _any stands for any 1 menu item. For instance, 
+* _any stands for any 1 menu item. For instance,
   (defmenu A/_any/A ...) will match /A/B/A but not /A/B/B/A.
 * _many stands for 1 or more menu items. For instance,
   (defmenu A/_many ...) will match /A/B and /A/B/C, but not
@@ -146,16 +150,20 @@ The menu body is passed the following arguments:
   "Kills the buffer associated with MENU."
   (kill-buffer (elxiki-menu-get-buffer menu)))
 
+(defun elxiki-menu-get-actions (menu)
+  "Return the action alist from MENU."
+  (nth 1 menu))
+
 (defun elxiki-menu-get-action (menu context)
   "Return from MENU the function CONTEXT calls for.
 See `defmenu' documentation for how actions are specified."
   (save-match-data
     (let ((path (elxiki/strip-slash (elxiki-context-get-menu context)))
-          (actions (nth 1 menu))
+          (actions (elxiki-menu-get-actions menu))
           action)
       ;; Prepare path
       (setq path
-            (replace-regexp-in-string (rx string-start (group (*? any)) 
+            (replace-regexp-in-string (rx string-start (group (*? any))
                                           (or "/" string-end))
                                       "_root" path nil nil 1))
       (setq path (elxiki-menu--reduce-item-name path))
@@ -270,7 +278,7 @@ before editing."
 ;;               (elxiki-line-goto-route inner-path 'create)
 ;;               (elxiki-line-fold)
 ;;               (elxiki-line-add-children children))
-;;             (write-region nil nil (elxiki-menu-get-file menu) 
+;;             (write-region nil nil (elxiki-menu-get-file menu)
 ;;                           nil 'no-message))
 ;;           (message "Saved Menu: %s" (elxiki-context-get-menu context)))
 ;;       (elxiki-menu-dispose menu))))

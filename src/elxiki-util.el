@@ -66,9 +66,10 @@ negative indentation.  INDENT defaults to 0. Does not move point."
 
 (defun elxiki-strip-end-fslash (string)
   "Strips the ending forward slash from STRING."
-  (replace-regexp-in-string (rx "/" (* blank) string-end)
-                            ""
-                            string))
+  (when string
+    (replace-regexp-in-string (rx "/" (* blank) string-end)
+                              ""
+                              string)))
 
 (defun elxiki-name-equal (name1 name2)
   "Return non-nil if NAME1 and NAME2 are equal, disregarding a final /."
@@ -99,11 +100,12 @@ line."
 
 (defun elxiki-path-root (path)
   "Drop PATH after first / character."
-  (save-match-data
-    (when (string-match (rx string-start (* blank)
-                            (group (* (not (any "/"))) (? "/")))
-                        path)
-      (match-string 1 path))))
+  (when path
+    (save-match-data
+      (when (string-match (rx string-start (* blank)
+                              (group (* (not (any "/"))) (? "/")))
+                          path)
+        (match-string 1 path)))))
 
 
 
@@ -210,7 +212,7 @@ POS defaults to point."
                   (insert (car strings))
                   (goto-char (point-min))
                   (current-indentation))))
-    (mapcar (lambda (string) 
+    (mapcar (lambda (string)
               (with-temp-buffer
                 (insert string)
                 (indent-line-to (max 0 (- (current-indentation) indent)))

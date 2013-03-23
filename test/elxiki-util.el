@@ -1,7 +1,7 @@
 (require 'elxiki-util)
 (require 'ert)
 
-(defvar elxiki-util-test--string-1 
+(defvar elxiki-util-test--string-1
   "ABCD\nEFGH\nIJKL\nMNOP\nQRST\nUVWX\nYZ")
 
 (ert-deftest elxiki-change-line/nil ()
@@ -158,6 +158,7 @@ Should return nil because it cannot go to next line."
     (should (= 0 (current-indentation)))))
 
 (ert-deftest elxiki-strip-end-fslash ()
+  (should-not (elxiki-strip-end-fslash nil))
   (should (string-equal "ABC"
                         (elxiki-strip-end-fslash "ABC/  ")))
   (should (string-equal "ABC"
@@ -186,6 +187,7 @@ Should return nil because it cannot go to next line."
                           (buffer-string)))))
 
 (ert-deftest elxiki-path-root ()
+  (should-not (elxiki-path-root nil))
   (should (string-equal "root/" (elxiki-path-root "root/sub/sub2")))
   (should (string-equal "/" (elxiki-path-root "/home")))
   (should (string-equal "whole-path" (elxiki-path-root "whole-path"))))
