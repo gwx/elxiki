@@ -68,11 +68,23 @@
                ("! " "emacs")))
             `("! " "emacs" ,home nil misc)))))
 
-
-
-
-
-
-
-
-
+(ert-deftest elxiki-context-create ()
+  "`elxiki-context-create': various."
+  (let ((context (elxiki-context-create)))
+    (should-not (elxiki-context-get-prefix context))
+    (should-not (elxiki-context-get-name context))
+    (should (string-equal default-directory
+                          (elxiki-context-get-directory context)))
+    (should-not (elxiki-context-get-menu context))
+    (should-not (elxiki-context-get-type context)))
+  (let ((context (elxiki-context-create
+                  :name 'name
+                  :prefix 'prefix
+                  :directory 'directory
+                  :type 'type
+                  :menu 'menu)))
+    (should (equal 'prefix (elxiki-context-get-prefix context)))
+    (should (equal 'name (elxiki-context-get-name context)))
+    (should (equal 'directory (elxiki-context-get-directory context)))
+    (should (equal 'menu (elxiki-context-get-menu context)))
+    (should (equal 'type (elxiki-context-get-type context)))))

@@ -48,6 +48,25 @@ ANCESTRY should be of the form returned by `elxiki-line-get-ancestry'."
 (defvar elxiki-context-format
   '(prefix name directory menu type))
 
+(defun elxiki-context-create (&rest args)
+  "Create a context with keyword args.
+Mainly useful for testing. The keywords are:
+:prefix    :: The prefix string of the final line.
+:name      :: The rest of the final line.
+:directory :: The directory for the context.
+:menu      :: The menu the context was under.
+:type      :: The context type ('directory, 'menu, or 'misc)"
+  (let (prefix name directory menu type)
+    (while (cdr args)
+      (case (car args)
+        (:prefix (setq prefix (cadr args)))
+        (:name (setq name (cadr args)))
+        (:directory (setq directory (cadr args)))
+        (:menu (setq menu (cadr args)))
+        (:type (setq type (cadr args))))
+      (setq args (cddr args)))
+    (list prefix name directory menu type)))
+
 (defun elxiki-context-get-prefix (context)
   "Retrieve the prefix from CONTEXT."
   (nth 0 context))
