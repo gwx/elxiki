@@ -148,7 +148,6 @@ If the prefix is currently \"- \", change it to \"+ \"."
 (defun elxiki-command/unfold-shell (context)
   "Adds the output of the shell command as children lines."
   (let ((default-directory (elxiki-context-get-directory context))
-        (shell-file-name "/bin/bash")
         (name (elxiki-context-get-name context))
         (line-prepare (lambda () (insert "| "))))
     (elxiki-line-append-children (shell-command-to-string name) line-prepare)
@@ -166,7 +165,6 @@ If the prefix is currently \"- \", change it to \"+ \"."
 (defun elxiki-command/run-async (context)
   "Runs the elxiki line asynchronously."
   (let ((default-directory (elxiki-context-get-directory context))
-        (shell-file-name "/bin/bash")
         (name (elxiki-context-get-name context)))
     (async-shell-command name)))
 

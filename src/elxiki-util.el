@@ -111,6 +111,9 @@ line."
 
 
 
+
+
+
 (defmacro elxiki-get-point (&rest forms)
   "Evaluate FORMS, return (point), and then reset point."
   `(save-excursion ,@forms (point)))

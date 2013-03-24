@@ -192,7 +192,7 @@ If unsuccessful, return nil and don't move point."
       (while (and (< n 0)
                   (elxiki-line-goto-previous-sibling)
                   (setq n (1+ n))))
-      (if (= n 0) 
+      (if (= n 0)
           (point)
         (goto-char start)
         nil))))
@@ -346,7 +346,7 @@ elxiki lines you are trying to find that don't exist."
         (while route
           (unless (elxiki-line-goto-sibling (car route))
             (if create
-                (elxiki-line-insert-after-siblings 
+                (elxiki-line-insert-after-siblings
                  (concat "- " (car route)) elxiki-line-indent-count)
               (goto-char start)
               (throw 'route nil)))
@@ -354,7 +354,7 @@ elxiki lines you are trying to find that don't exist."
               (unless (elxiki-line-goto-child (car route))
                 (if create
                     (progn
-                      (elxiki-line-insert-after-children 
+                      (elxiki-line-insert-after-children
                        (concat "- " (car route)) elxiki-line-indent-count)
                       (elxiki-line-goto-first-child))
                   (goto-char start)
