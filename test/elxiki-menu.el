@@ -40,7 +40,7 @@ later ones."
     (unwind-protect
         (with-current-buffer (elxiki-menu-get-buffer menu)
           (should (string-equal (buffer-string) ""))
-          (should-not (elxiki-menu-get-actions menu))
+          (should-not (elxiki-menu-get-action-alist menu))
           (should (string-equal "/a.menu" (elxiki-menu-get-file menu))))
       (elxiki-menu-dispose menu))))
 
