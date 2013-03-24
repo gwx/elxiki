@@ -62,4 +62,27 @@ later ones."
             (should (string-equal (buffer-string) menu-def)))
         (elxiki-menu-dispose menu)))))
 
-;; menu-load advanced.
+(ert-deftest elxiki-menu-load/advanced ()
+  "`elxiki-menu-load': loading an advanced menu."
+  (let* ((file (make-temp-file "ert-elxiki-menu-" nil ".menu.el"))
+         (init "+ A\n+ B\n  + C")
+         (action '(concat "+ " "D"))
+         (text (format "(defmenu _init %S)\n(defmenu A %S)"
+                       init action))
+         menu)
+    (with-temp-file file (insert text))
+    (cl-letf (;; Always find file as the menu file regardless of context.
+              ((symbol-function 'elxiki-menu-find)
+               #'(lambda (arg) file)))
+      (setq menu (elxiki-menu-load (make-list 5 nil)))
+      (unwind-protect
+          (with-current-buffer (elxiki-menu-get-buffer menu)
+            (should (string-equal file (elxiki-menu-get-file menu)))
+            (should (string-equal init (buffer-string)))
+            (let ((cell (should
+                         (assoc (elxiki-menu--item-to-regexp "A")
+                                (elxiki-menu-get-action-alist menu)))))
+              (should
+               (string-equal "+ D"
+                             (funcall (cdr cell) nil nil nil nil nil)))))
+        (elxiki-menu-dispose menu)))))

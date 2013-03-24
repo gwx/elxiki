@@ -117,7 +117,7 @@ There are several special names you can use in the path:
   (defmenu A/_many ...) will match /A/B and /A/B/C, but not
   /A by itself.
 
-Later defmenu calls in a file take precedence.
+Later defmenu calls in a file take precedence over earlier ones.
 
 There is also the special menu _init, which is called every time
 any item in the hierarchy is opened. Its return value is used as
@@ -150,8 +150,10 @@ The menu body is passed the following arguments:
   "Kills the buffer associated with MENU."
   (kill-buffer (elxiki-menu-get-buffer menu)))
 
-(defun elxiki-menu-get-actions (menu)
-  "Return the action alist from MENU."
+(defun elxiki-menu-get-action-alist (menu)
+  "Return the action alist from MENU.
+This is an alist of regular expressions matching line names to
+the appopriate function to call."
   (nth 1 menu))
 
 (defun elxiki-menu-get-action (menu context)
@@ -159,7 +161,7 @@ The menu body is passed the following arguments:
 See `defmenu' documentation for how actions are specified."
   (save-match-data
     (let ((path (elxiki/strip-slash (elxiki-context-get-menu context)))
-          (actions (elxiki-menu-get-actions menu))
+          (actions (elxiki-menu-get-action-alist menu))
           action)
       ;; Prepare path
       (setq path

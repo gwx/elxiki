@@ -23,7 +23,7 @@ PREDICATE and COMMAND should be a function of a single argument,
 taking an elxiki context.
 
 PREDICATE should return non-nil if you want COMMAND to be
-run. Only the first command that succeeds is used. 
+run. Only the first command that succeeds is used.
 
 PREFIX-COUNT is how many C-u presses you want to assign the
 command to. It defaults to 0.
@@ -216,7 +216,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
   (let ((default-directory (elxiki-context-get-directory context))
         (name (elxiki-context-get-name context))
         (line-prepare (lambda () (insert "| "))))
-    (elxiki-line-append-children (pprint-to-string (eval (read name))) 
+    (elxiki-line-append-children (format "%S" (eval (read name)))
                                  line-prepare)
     (elxiki-filter)))
 
@@ -249,7 +249,7 @@ If the prefix is currently \"- \", change it to \"+ \"."
     (when (string-equal "+ " prefix)
       (elxiki-line-set-prefix "- "))
     (when (and (= 0 (length prefix))
-               (elxiki-menu-find (elxiki/path-root 
+               (elxiki-menu-find (elxiki/path-root
                                   (elxiki-context-get-menu context))))
       (if (elxiki-context-menu-root-p context)
           (elxiki-line-set-prefix "@ ")

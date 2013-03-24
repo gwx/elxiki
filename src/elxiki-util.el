@@ -1,7 +1,5 @@
 ;;; elxiki-util.el --- Various utility commands.
 
-(require 'pprint)
-
 (defun elxiki-change-line (&optional n)
   "Move to the beginning of the line, relative N lines from this one.
 Return point if succesful, or nil if unsuccessful. If
@@ -143,7 +141,7 @@ POS defaults to point."
 
 (defun elxiki-wrap-text (string &optional width)
   "Wraps STRING around target WIDTH."
-  (let ((string (pprint-to-string string width)))
+  (let ((string (format "%S" string width)))
     (substring string 1 (1- (length string)))))
 
 (defun elxiki-prefix-buffer (string)
